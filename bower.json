@@ -1,0 +1,22 @@
+{
+  "name": "chicken-invaders",
+  "description": "Multiplayer chicken invaders game created with Js, using CraftyJs and Websockets",
+  "main": "index.js",
+  "authors": [
+    "stoyaneft"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/stoyaneft/chicken-invaders",
+  "moduleType": [],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/lib",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "crafty": "~0.7.0"
+  }
+}
