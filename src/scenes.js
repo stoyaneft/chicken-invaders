@@ -6,5 +6,25 @@ Crafty.scene('Game', function() {
 	}
 
 	this.player = Crafty.e('Player').at(12, 14);
-	console.log(Game.width());
+
+	this.level_completed = this.bind('DeadChicken', function() {
+		console.log(Crafty('Chicken').length);
+		if(!Crafty('Chicken').length) {
+			// Crafty.scene('LevelCompleted');
+			console.log('LevelCompleted')
+		}
+	})
+
+	this.game_over = this.bind('GameOver', function() {
+		console.log('game over :(');
+	})
+
+}, function() {
+	this.unbind('DeadChicken', this.level_completed);
 });
+
+Crafty.scene('LevelCompleted', function() {
+	Crafty.e('2D, DOM, Text')
+		.text('Level Completed!')
+		.attr({ x: 0, y: Game.height()/2 - 24, w: Game.width() });
+})

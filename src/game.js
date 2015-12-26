@@ -8,6 +8,14 @@ Game = {
 		}
 	},
 
+	MAX_LIVES: 3,
+	EGG_POSSIBILITY: 0.0005,
+	BULLET_STARTING_SPEED: 200,
+	BULLET_SPEED: 5,
+	PLAYER_SPEED: 4,
+	EGG_SPEED: 3,
+	CHICKEN_SPEED: 1,
+
 	// The total width of the game screen. Since our grid takes up the entire screen
 	//  this is just the width of a tile times the width of the grid
 	width: function() {
