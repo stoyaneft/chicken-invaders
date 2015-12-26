@@ -24,12 +24,14 @@ Crafty.c('Player', {
 		.color('rgb(20, 125, 40)')
 		.onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
+        .bind('PlayerDead', this.makeImmortal)
 		.bind('KeyDown', function() {
 			if (this.isDown('SPACE'))
 				this.shoot();
 		});
 
         this.lives = Game.MAX_LIVES;
+        this.immortal = false;
 	},
 
     keepInField: function(oldPos) {
@@ -40,19 +42,35 @@ Crafty.c('Player', {
     },
 
     die: function() {
-        if (this.lives == 0) {
-            Crafty.trigger('GameOver', this);
-        } else {
-            this.lives--;
-            console.log('lives left: ', this.lives);
+        if (!this.immortal) {
+            if (this.lives == 0) {
+                Crafty.trigger('GameOver', this);
+            } else {
+                this.lives--;
+                console.log('lives left: ', this.lives);
+                this.trigger('PlayerDead');
+            }
         }
+    },
+
+    makeImmortal: function() {
+        var self = this;
+        this.immortal = true;
+        console.log('immortal');
+        this._setInt = setInterval(function() {
+            console.log('blink');
+            Crafty('Player').toggleComponent('Canvas');
+        }, 500)
+        setTimeout(function () {
+            self.immortal = false;
+            console.log('not immortal');
+            clearInterval(self._setInt);
+        }, 3000);
     },
 
 	shoot: function() {
 		Crafty.e('Bullet').attr({x: this.x + Game.map_grid.tile.width / 2, y: this.y, w:5, h:5});
 	}
-
-
 });
 
 Crafty.c('Bullet', {
