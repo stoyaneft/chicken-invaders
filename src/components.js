@@ -29,13 +29,10 @@ Crafty.c('Player', {
 			if (this.isDown('SPACE'))
 				this.shoot();
 		});
-		console.log("in player")
 	},
 
 	shoot: function() {
-		console.log('going to shooot');
 		Crafty.e('Bullet').attr({x: this.x + Game.map_grid.tile.width / 2, y: this.y, w:5, h:5});
-		console.log('shot');
 	}
 
 
@@ -45,20 +42,23 @@ Crafty.c('Bullet', {
 	init: function() {
 		this.requires('2D, Canvas, Collision, Color')
 		.color('white')
-		.bind('EnterFrame', this.movee)
+		.bind('EnterFrame', this.mov)
 		.onHit('Chicken', this.damageChicken);
+		this.speed = 200;
 	},
 
 	damageChicken: function(data) {
 		var chicken = data[0].obj;
 		chicken.destroy();
+		this.destroy();
 	},
 
-	movee: function(eventData) {
+	mov: function(eventData) {
 		console.log('bullet moving');
 		console.log(this.x, " ", this.y)
 		if (this.y > 0) {
-			this.y = this.y - 750 * (eventData.dt / 1000);
+			this.y = this.y - this.speed * (eventData.dt / 1000);
+			this.speed += 5;
 		} else {
 			this.destroy();
 		}
@@ -69,7 +69,23 @@ Crafty.c('Bullet', {
 Crafty.c('Chicken', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Color')
-		.color('red');
+		.color('red')
+		.bind('EnterFrame', this.fly)
+		.bind('ChangeDirection', this.changeDirection);
 		console.log('in chicken');
+		this.speed = 1;
+	},
+
+	changeDirection: function() {
+        this.speed *= -1;
+        this.x += this.speed;
+	},
+
+	fly: function() {
+		if (this.x <= 0 || this.x + Game.map_grid.tile.width >= Game.width()) {
+			Crafty('Chicken').trigger('ChangeDirection');
+        } else {
+			this.x += this.speed;
+		}
 	}
 });

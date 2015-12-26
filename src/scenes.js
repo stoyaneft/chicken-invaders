@@ -1,5 +1,10 @@
 Crafty.scene('Game', function() {
-	this.player = Crafty.e('Player').at(6, 6);
-	this.chicken = Crafty.e('Chicken').at(10, 10);
-	console.log('in game scene');
+	for (var i = 1; i < 5; i++) {
+		for (var j = 8; j < 16; j++) {
+			Crafty.e('Chicken').at(j, i);
+		}
+	}
+
+	this.player = Crafty.e('Player').at(12, 14);
+	console.log(Game.width());
 });
