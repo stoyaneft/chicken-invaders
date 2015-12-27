@@ -1,17 +1,17 @@
 Crafty.c('Grid', {
   init: function() {
     this.attr({
-      w: Game.map_grid.tile.width,
-      h: Game.map_grid.tile.height
+      w: Settings.TILE_WIDTH,
+      h: Settings.TILE_HEIGHT
     })
   },
 
   // Locate this entity at the given position on the grid
   at: function(x, y) {
     if (x === undefined && y === undefined) {
-      return { x: this.x/Game.map_grid.tile.width, y: this.y/Game.map_grid.tile.height }
+      return { x: this.x/Settings.TILE_WIDTH, y: this.y/Settings.TILE_HEIGHT }
     } else {
-      this.attr({ x: x * Game.map_grid.tile.width, y: y * Game.map_grid.tile.height });
+      this.attr({ x: x * Settings.TILE_WIDTH, y: y * Settings.TILE_HEIGHT });
       return this;
     }
   }
@@ -19,10 +19,8 @@ Crafty.c('Grid', {
 
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard, Color')
-		.fourway(4)
-		.color('rgb(20, 125, 40)')
-		.onHit('Solid', this.die)
+		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard, spr_player')
+		.fourway(4).onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
         .bind('PlayerDead', this.makeImmortal)
 		.bind('KeyDown', function() {
@@ -30,12 +28,12 @@ Crafty.c('Player', {
 				this.shoot();
 		});
 
-        this.lives = Game.MAX_LIVES;
+        this.lives = Settings.MAX_LIVES;
         this.immortal = false;
 	},
 
     keepInField: function(oldPos) {
-        if (this.x + this.w >= Game.width() || this.x <= 0 || this.y <= 0 || this.y + this.h >= Game.height()) {
+        if (this.x + this.w >= Settings.WINDOW_WIDTH || this.x <= 0 || this.y <= 0 || this.y + this.h >= Settings.WINDOW_HEIGHT) {
             this.x = oldPos.x;
             this.y = oldPos.y;
         }
@@ -69,7 +67,7 @@ Crafty.c('Player', {
     },
 
 	shoot: function() {
-		Crafty.e('Bullet').attr({x: this.x + Game.map_grid.tile.width / 2, y: this.y, w:5, h:5});
+		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
 	}
 });
 
@@ -79,7 +77,7 @@ Crafty.c('Bullet', {
 		.color('white')
 		.bind('EnterFrame', this.mov)
 		.onHit('Chicken', this.damageChicken);
-		this.speed = Game.BULLET_STARTING_SPEED;
+		this.speed = Settings.BULLET_STARTING_SPEED;
 	},
 
 	damageChicken: function(data) {
@@ -92,7 +90,7 @@ Crafty.c('Bullet', {
 	mov: function(eventData) {
 		if (this.y > 0) {
 			this.y = this.y - this.speed * (eventData.dt / 1000);
-			this.speed += Game.BULLET_SPEED;
+			this.speed += Settings.BULLET_SPEED;
 		} else {
 			this.destroy();
 		}
@@ -101,12 +99,11 @@ Crafty.c('Bullet', {
 
 Crafty.c('Chicken', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Solid, Color')
-		.color('red')
+		this.requires('2D, Canvas, Grid, Solid, spr_chicken')
 		.bind('EnterFrame', this.fly)
         .bind('EnterFrame', this.layEgg)
 		.bind('ChangeDirection', this.changeDirection);
-		this.speed = Game.CHICKEN_SPEED;
+		this.speed = Settings.CHICKEN_SPEED;
 	},
 
 	changeDirection: function() {
@@ -115,7 +112,7 @@ Crafty.c('Chicken', {
 	},
 
 	fly: function() {
-		if (this.x <= 0 || this.x + Game.map_grid.tile.width >= Game.width()) {
+		if (this.x <= 0 || this.x + Settings.TILE_WIDTH >= Settings.WINDOW_WIDTH) {
 			Crafty('Chicken').trigger('ChangeDirection');
         } else {
 			this.x += this.speed;
@@ -123,23 +120,22 @@ Crafty.c('Chicken', {
 	},
 
     layEgg: function() {
-        if (Math.random() < Game.EGG_POSSIBILITY) {
-            Crafty.e('Egg').attr({x: this.x + Game.map_grid.tile.width / 2, y: this.y, w:15, h:15})
+        if (Math.random() < Settings.EGG_POSSIBILITY) {
+            Crafty.e('Egg').attr({x: this.x + Settings.TILE_WIDTH, y: this.y, w:15, h:15})
         }
     }
 });
 
 Crafty.c('Egg', {
     init: function() {
-        this.requires('2D, Canvas, Grid, Circle, Solid, Color')
-        .color('white')
+        this.requires('2D, Canvas, Grid, Circle, Solid, spr_egg')
         .bind('GroundHit', this.onGroundHit)
         .bind('EnterFrame', this.mov);
-        this.speed = Game.EGG_SPEED;
+        this.speed = Settings.EGG_SPEED;
     },
 
     mov: function() {
-        if (this.y >= Game.height()) {
+        if (this.y >= Settings.WINDOW_HEIGHT) {
             this.trigger('GroundHit');
         } else {
             this.y += this.speed;
