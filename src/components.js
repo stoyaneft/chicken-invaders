@@ -46,7 +46,7 @@ Crafty.c('Player', {
             } else {
                 this.lives--;
                 console.log('lives left: ', this.lives);
-                this.trigger('PlayerDead');
+                Crafty.trigger('PlayerDead', this, this.lives);
             }
         }
     },
@@ -121,7 +121,7 @@ Crafty.c('Chicken', {
 
     layEgg: function() {
         if (Math.random() < Settings.EGG_POSSIBILITY) {
-            Crafty.e('Egg').attr({x: this.x + Settings.TILE_WIDTH, y: this.y, w:15, h:15})
+            Crafty.e('Egg').attr({x: this.x + Settings.TILE_WIDTH, y: this.y + Settings.TILE_HEIGHT})
         }
     }
 });
@@ -145,5 +145,45 @@ Crafty.c('Egg', {
     onGroundHit: function() {
         console.log('hitted ground');
         this.destroy();
+    }
+});
+
+Crafty.c('Scoreboard', {
+    init: function() {
+        this.requires('2D, DOM, spr_scoreboard')
+        .attr({x: 0, y:0})
+    }
+});
+
+Crafty.c('Points', {
+    init: function() {
+        this.requires('2D, DOM, Text')
+        .attr({x: 5, y:6.5, points: 0})
+        .text(0)
+        .textColor('white')
+        .textFont({size: '20px'})
+        .bind('DeadChicken', this.changeScore)
+        //.css({'font-size': '50px', 'color': 'white'});
+    },
+
+    changeScore: function() {
+        this.points += 100;
+        this.text(this.points)
+    }
+});
+
+Crafty.c('Lives', {
+    init: function() {
+        this.requires('2D, DOM, Text')
+        .attr({x: 125, y:6.5, lives: Settings.MAX_LIVES})
+        .text(Settings.MAX_LIVES)
+        .textColor('white')
+        .textFont({size: '20px'})
+        .bind('PlayerDead', this.changeLives);
+    },
+
+    changeLives: function() {
+        this.lives -= 1;
+        this.text(this.lives);
     }
 });

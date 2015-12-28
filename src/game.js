@@ -4,7 +4,7 @@ Settings = {
 	TILE_WIDTH: 64,
 	TILE_HEIGHT: 64,
 	MAX_LIVES: 3,
-	EGG_POSSIBILITY: 0.0005,
+	EGG_POSSIBILITY: 0.001,
 	BULLET_STARTING_SPEED: 200,
 	BULLET_SPEED: 5,
 	PLAYER_SPEED: 4,
@@ -23,4 +23,4 @@ Game = {
 	}
 }
 
-$text_css = { 'font-size': '24px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center' }
+$text_css = { 'font-size': '54px', 'font-family': 'Arial', 'color': 'white', 'text-align': 'center' }

@@ -10,6 +10,9 @@ Crafty.scene('Game', function() {
 
 
 	this.player = Crafty.e('Player').at(6, 6);
+	this.scoreboard = Crafty.e('Scoreboard');
+	this.lives_field = Crafty.e('Lives');
+	this.points_field = Crafty.e('Points');
 
 	this.level_completed = this.bind('DeadChicken', function() {
 		console.log(Crafty('Chicken').length);
@@ -35,33 +38,29 @@ Crafty.scene('LevelCompleted', function() {
 
 Crafty.scene('Loading', function(){
 
-  console.log('loading scene');
   Crafty.e('2D, DOM, Text')
     .text('Loading...')
 	.css($text_css);
- console.log('text rendered');
+
+
 
   // Load our sprite map image
-var sprite = Crafty.sprite("assets/sprite_map.png", {
+var sprite_map = Crafty.sprite("assets/sprite_map.png", {
 	spr_chicken: [0, 0, 64, 64],
 	spr_egg: [64, 0, 9, 11],
-	spr_player: [76, 0, 55, 64]
+	spr_player: [76, 0, 55, 64],
+	spr_scoreboard: [0, 64, 160, 40]
 });
 
   var assetsObj = {
 	  "sprites": {
-		  "assets/sprite_map.png": {
-			  "map": {
-				  spr_chicken: [0, 0, 64, 64],
-				  spr_egg: [64, 0, 9, 11],
-		  		  spr_player: [76, 0, 55, 64]
-			  }
-		  }
+		  "assets/sprite_map.png": sprite_map
 	  }
   }
-  Crafty.load(assetsObj, function(){
+  setTimeout(function() {Crafty.load(assetsObj, function(){
 	console.log('assets loaded');
     // Now that our sprites are ready to draw, start the game
     Crafty.scene('Game');
   })
+  }, 1000);
 });
