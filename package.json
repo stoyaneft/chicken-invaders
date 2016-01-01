@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/stoyaneft/chicken-invaders#readme",
   "dependencies": {
-    "craftyjs": "^0.7.0"
+    "craftyjs": "^0.7.0",
+    "express": "^4.13.3",
+    "socket.io": "^1.3.7"
   }
 }

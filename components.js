@@ -20,7 +20,8 @@ Crafty.c('Grid', {
 Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard, spr_player')
-		.fourway(4).onHit('Solid', this.die)
+		.fourway(4)
+        .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
         .bind('PlayerDead', this.makeImmortal)
 		.bind('KeyDown', function() {
@@ -42,7 +43,7 @@ Crafty.c('Player', {
     die: function() {
         if (!this.immortal) {
             if (this.lives == 0) {
-                Crafty.trigger('GameOver', this);
+                Crafty.trigger('GameOver');
             } else {
                 this.lives--;
                 console.log('lives left: ', this.lives);
@@ -84,12 +85,12 @@ Crafty.c('Bullet', {
 		var chicken = data[0].obj;
 		this.destroy();
 		chicken.destroy();
-        Crafty.trigger('DeadChicken', this);
+        Crafty.trigger('DeadChicken', {x: chicken.x + Settings.TILE_WIDTH / 2 - 13, y: chicken.y + Settings.TILE_HEIGHT / 2 - 8});
 	},
 
 	mov: function(eventData) {
 		if (this.y > 0) {
-			this.y = this.y - this.speed * (eventData.dt / 1000);
+			this.y -= this.speed * (eventData.dt / 1000);
 			this.speed += Settings.BULLET_SPEED;
 		} else {
 			this.destroy();
@@ -187,3 +188,9 @@ Crafty.c('Lives', {
         this.text(this.lives);
     }
 });
+
+Crafty.c('Smoke', {
+    init: function() {
+        this.requires('2D, Canvas, spr_smoke')
+    }
+})
