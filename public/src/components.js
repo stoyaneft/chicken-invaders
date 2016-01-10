@@ -19,7 +19,7 @@ Crafty.c('Grid', {
 
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard, spr_player')
+		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard')
 		.fourway(4)
         .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
@@ -58,7 +58,7 @@ Crafty.c('Player', {
         console.log('immortal');
         this._setInt = setInterval(function() {
             console.log('blink');
-            Crafty('Player').toggleComponent('Canvas');
+            self.toggleComponent('Canvas');
         }, 500)
         setTimeout(function () {
             self.immortal = false;
@@ -70,6 +70,18 @@ Crafty.c('Player', {
 	shoot: function() {
 		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
 	}
+});
+
+Crafty.c('FirstPlayer', {
+    init: function() {
+        this.requires('Player, spr_player');
+    }
+});
+
+Crafty.c('SecondPlayer', {
+    init: function() {
+        this.requires('Player, spr_player');
+    }
 });
 
 Crafty.c('Bullet', {

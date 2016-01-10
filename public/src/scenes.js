@@ -1,34 +1,72 @@
 Crafty.scene('Game', function() {
-	var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
-	var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
-	var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
-	var padding = (tile_cols - chicken_cols) / 2;
-	for (var i = 0; i < 4; i++)
-		for(var j = 1; j <= chicken_cols; j++) {
-			Crafty.e('Chicken').at(j, i + padding);
-		}
-
-
-	this.player = Crafty.e('Player').at(6, 6);
+	var self = this;
+	intitalizeChickens();
+	setEventHandlers();
+	this.localPlayer = Crafty.e('FirstPlayer').at(4, 6);
 	this.scoreboard = Crafty.e('Scoreboard');
 	this.lives_field = Crafty.e('Lives');
 	this.points_field = Crafty.e('Points');
-	this.level_completed = this.bind('DeadChicken', function(coords) {
-		console.log(Crafty('Chicken').length);
-		var smoke = Crafty.e('Smoke').attr(coords);
-		setTimeout(function() {
-			smoke.destroy();
-		}, 200);
+	socket.emit("new player", {x: this.localPlayer.x, y: this.localPlayer.y});
+	
+	// var smoke = Crafty.e('Smoke').attr(coords);
+	// setTimeout(function() {
+	// 	smoke.destroy();
+	// }, 200);
 
-		if(!Crafty('Chicken').length) {
-			// Crafty.scene('LevelCompleted');
-			console.log('LevelCompleted')
-		}
-	})
+	function intitalizeChickens() {
+		var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
+		var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
+		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
+		var padding = (tile_cols - chicken_cols) / 2;
+		for (var i = 0; i < 4; i++)
+			for(var j = 1; j <= chicken_cols; j++) {
+				Crafty.e('Chicken').at(j, i + padding);
+			}
+	};
 
-	this.game_over = this.bind('GameOver', function() {
-		console.log('game over :(');
-	})
+	function setEventHandlers() {
+		self.bind('DeadChicken', function(coords) {
+			console.log(Crafty('Chicken').length);
+			if(!Crafty('Chicken').length) {
+				// Crafty.scene('LevelCompleted');
+				console.log('LevelCompleted')
+			}
+		});
+		self.bind('GameOver', function() {
+		   console.log('game over :(');
+		});
+		socket.on("disconnect", onSocketDisconnect);
+		socket.on("new player", onNewPlayer);
+		socket.on("move player", onMovePlayer);
+	}
+
+	function onSocketConnected() {
+		console.log("Connected to socket server");
+		socket.emit("new player", {x: self.localPlayer.x, y: self.localPlayer.y});
+	};
+
+	function onSocketDisconnect() {
+		console.log("Disconnected from server");
+	};
+
+	function onNewPlayer(data) {
+		console.log(data);
+		console.log("New player connected: "+data.sid);
+		self.remotePlayer = Crafty.e('SecondPlayer').at(data.x, data.y);
+	};
+
+	function onMovePlayer(data) {
+		console.log('moved');
+		var movePlayer;
+		if (data.id === localPlayer.id)
+			movePlayer = localPlayer;
+		else
+		 	movePlayer = remotePlayer;
+
+		movePlayer.setX(data.x);
+		movePlayer.setY(data.y);
+	};
+
 
 }, function() {
 	this.unbind('DeadChicken', this.level_completed);
