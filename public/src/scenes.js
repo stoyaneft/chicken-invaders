@@ -3,9 +3,9 @@ Crafty.scene('Game', function() {
 	intitalizeChickens();
 	setEventHandlers();
 	this.localPlayer = Crafty.e('LocalPlayer').at(4, 6);
-	this.scoreboard = Crafty.e('Scoreboard');
-	this.lives_field = Crafty.e('Lives');
-	this.points_field = Crafty.e('Points');
+	// this.scoreboard = Crafty.e('Scoreboard');
+	// this.lives_field = Crafty.e('Lives');
+	// this.points_field = Crafty.e('Points');
 	socket.emit("new player", {x: this.localPlayer.x, y: this.localPlayer.y});
 
 	// var smoke = Crafty.e('Smoke').attr(coords);
@@ -38,6 +38,7 @@ Crafty.scene('Game', function() {
 		socket.on("disconnect", onSocketDisconnect);
 		socket.on("new player", onNewPlayer);
 		socket.on("move player", onMovePlayer);
+		socket.on("dead chicken", onDeadChicken);
 	}
 
 	function onSocketConnected() {
@@ -56,18 +57,14 @@ Crafty.scene('Game', function() {
 	};
 
 	function onMovePlayer(data) {
-		console.log(data);
-		console.log('moved: ' + data.sid);
-		// var movePlayer;
-		// if (data.sid === localPlayer.sid)
-		// 	movePlayer = localPlayer;
-		// else
-		//  	movePlayer = remotePlayer;
-
 		self.remotePlayer.x = data.x;
 		self.remotePlayer.y = data.y;
-		console.log(self.remotePlayer);
 	};
+
+	function onDeadChicken(data) {
+		console.log('DeadChicken');
+		Crafty(data.id).destroy();
+	}
 
 
 }, function() {
@@ -93,7 +90,7 @@ var sprite_map = Crafty.sprite("assets/sprite_map.png", {
 	spr_chicken: [0, 0, 64, 64],
 	spr_egg: [64, 0, 9, 11],
 	spr_player: [76, 0, 55, 64],
-	spr_scoreboard: [0, 64, 160, 40],
+	spr_lscoreboard: [0, 64, 160, 40],
 	spr_smoke: [133, 0, 27, 27]
 });
 

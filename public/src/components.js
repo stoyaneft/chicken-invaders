@@ -19,47 +19,41 @@ Crafty.c('Grid', {
 
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision')
-        .onHit('Solid', this.die)
-        .bind('PlayerDead', this.makeImmortal)
-
+		this.requires('2D, Canvas, Grid, Collision');
         this.lives = Settings.MAX_LIVES;
         this.immortal = false;
 	},
 
-    keepInField: function(oldPos) {
-        if (this.x + this.w >= Settings.WINDOW_WIDTH || this.x <= 0 || this.y <= 0 || this.y + this.h >= Settings.WINDOW_HEIGHT) {
-            this.x = oldPos.x;
-            this.y = oldPos.y;
-        }
-        socket.emit('move player', {x: this.x, y: this.y})
-    },
-
-    die: function() {
+    die: function(data) {
         if (!this.immortal) {
             if (this.lives == 0) {
                 Crafty.trigger('GameOver');
             } else {
                 this.lives--;
                 console.log('lives left: ', this.lives);
-                Crafty.trigger('PlayerDead', this, this.lives);
+                Crafty.trigger('PlayerDead', {lives: this.lives, id: this.getId()});
             }
         }
     },
 
-    makeImmortal: function() {
-        var self = this;
-        this.immortal = true;
-        console.log('immortal');
-        this._setInt = setInterval(function() {
-            console.log('blink');
-            self.toggleComponent('Canvas');
-        }, 500)
-        setTimeout(function () {
-            self.immortal = false;
-            console.log('not immortal');
-            clearInterval(self._setInt);
-        }, 3000);
+    makeImmortal: function(data) {
+        if (this.getId() === data.id) {
+            var self = this;
+            this.immortal = true;
+            console.log('immortal');
+            this._setInt = setInterval(function() {
+                console.log('blink');
+                self.toggleComponent('Canvas');
+            }, 500)
+            setTimeout(function () {
+                self.immortal = false;
+                console.log('not immortal');
+                clearInterval(self._setInt);
+            }, 3000);
+            if (!self.has('Canvas')) {
+                self.toggleComponent('Canvas');
+            }
+        }
     },
 
 	shoot: function() {
@@ -78,9 +72,7 @@ Crafty.c('LocalPlayer', {
 			if (this.isDown('SPACE'))
 				this.shoot();
 		});
-
-        this.lives = Settings.MAX_LIVES;
-        this.immortal = false;
+        this.scoreboard = Crafty.e("LocalScoreboard");
 	},
 
     keepInField: function(oldPos) {
@@ -91,42 +83,17 @@ Crafty.c('LocalPlayer', {
         socket.emit('move player', {x: this.x, y: this.y})
     },
 
-    die: function() {
-        if (!this.immortal) {
-            if (this.lives == 0) {
-                Crafty.trigger('GameOver');
-            } else {
-                this.lives--;
-                console.log('lives left: ', this.lives);
-                Crafty.trigger('PlayerDead', this, this.lives);
-            }
-        }
-    },
-
-    makeImmortal: function() {
-        var self = this;
-        this.immortal = true;
-        console.log('immortal');
-        this._setInt = setInterval(function() {
-            console.log('blink');
-            self.toggleComponent('Canvas');
-        }, 500)
-        setTimeout(function () {
-            self.immortal = false;
-            console.log('not immortal');
-            clearInterval(self._setInt);
-        }, 3000);
-    },
-
 	shoot: function() {
 		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
 	}
 });
 
-
 Crafty.c('RemotePlayer', {
     init: function() {
-        this.requires('Player, spr_player');
+        this.requires('Player, spr_player')
+        .onHit('Solid', this.die)
+        .bind('PlayerDead', this.makeImmortal);
+        this.scoreboard = Crafty.e('RemoteScoreboard');
     }
 });
 
@@ -143,7 +110,7 @@ Crafty.c('Bullet', {
 		var chicken = data[0].obj;
 		this.destroy();
 		chicken.destroy();
-        Crafty.trigger('DeadChicken', {x: chicken.x + Settings.TILE_WIDTH / 2 - 13, y: chicken.y + Settings.TILE_HEIGHT / 2 - 8});
+        Crafty.trigger('DeadChicken', {id: chicken.getId()});
 	},
 
 	mov: function(eventData) {
@@ -209,19 +176,37 @@ Crafty.c('Egg', {
 
 Crafty.c('Scoreboard', {
     init: function() {
-        this.requires('2D, DOM, spr_scoreboard')
+        this.requires('2D, DOM');
+        this.score = Crafty.e('Points');
+        this.lives = Crafty.e('Lives');
+    },
+
+    changeScore: function() {
+        this.score.changeScore();
+    },
+
+    changeLives: function() {
+        this.lives.changeLives();
+    }
+});
+
+Crafty.c('LocalScoreboard', {
+    init: function() {
+        this.requires('Scoreboard, spr_lscoreboard')
         .attr({x: 0, y:0})
+        .bind('DeadChicken', this.changeScore)
+        .bind('PlayerDead', this.changeLives);
+        this.score.attr({x: 5, y:6.5, points: 0});
+        this.lives.attr({x: 125, y:6.5, lives: Settings.MAX_LIVES});
     }
 });
 
 Crafty.c('Points', {
     init: function() {
         this.requires('2D, DOM, Text')
-        .attr({x: 5, y:6.5, points: 0})
         .text(0)
         .textColor('white')
         .textFont({size: '20px'})
-        .bind('DeadChicken', this.changeScore)
         //.css({'font-size': '50px', 'color': 'white'});
     },
 
@@ -234,11 +219,9 @@ Crafty.c('Points', {
 Crafty.c('Lives', {
     init: function() {
         this.requires('2D, DOM, Text')
-        .attr({x: 125, y:6.5, lives: Settings.MAX_LIVES})
         .text(Settings.MAX_LIVES)
         .textColor('white')
         .textFont({size: '20px'})
-        .bind('PlayerDead', this.changeLives);
     },
 
     changeLives: function() {

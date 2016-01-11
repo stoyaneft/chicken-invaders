@@ -22,6 +22,7 @@ function onSocketConnection(client) {
     client.on("disconnect", onClientDisconnect);
     client.on("new player", onNewPlayer);
     client.on("move player", onMovePlayer);
+    client.on('dead chicekn', onDeadChicken);
 };
 
 function onClientDisconnect() {
@@ -83,6 +84,10 @@ function onMovePlayer(data) {
 	// Broadcast updated position to connected socket clients
 	this.broadcast.emit("move player", {sid: movePlayer.sid, x: movePlayer.getX(), y: movePlayer.getY()});
 };
+
+function onDeadChicken(data) {
+    this.broadcast.emit("dead chicken", {id: data.id});
+}
 
 function playerById(id) {
     var i;
