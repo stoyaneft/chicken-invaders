@@ -68,7 +68,20 @@ function onNewPlayer(data) {
 };
 
 function onMovePlayer(data) {
+    var movePlayer = playerById(this.id);
 
+	// Player not found
+	if (!movePlayer) {
+		util.log("Player not found: "+this.id);
+		return;
+	};
+
+	// Update player position
+	movePlayer.setX(data.x);
+	movePlayer.setY(data.y);
+
+	// Broadcast updated position to connected socket clients
+	this.broadcast.emit("move player", {sid: movePlayer.sid, x: movePlayer.getX(), y: movePlayer.getY()});
 };
 
 function playerById(id) {

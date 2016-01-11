@@ -2,12 +2,12 @@ Crafty.scene('Game', function() {
 	var self = this;
 	intitalizeChickens();
 	setEventHandlers();
-	this.localPlayer = Crafty.e('FirstPlayer').at(4, 6);
+	this.localPlayer = Crafty.e('LocalPlayer').at(4, 6);
 	this.scoreboard = Crafty.e('Scoreboard');
 	this.lives_field = Crafty.e('Lives');
 	this.points_field = Crafty.e('Points');
 	socket.emit("new player", {x: this.localPlayer.x, y: this.localPlayer.y});
-	
+
 	// var smoke = Crafty.e('Smoke').attr(coords);
 	// setTimeout(function() {
 	// 	smoke.destroy();
@@ -52,19 +52,21 @@ Crafty.scene('Game', function() {
 	function onNewPlayer(data) {
 		console.log(data);
 		console.log("New player connected: "+data.sid);
-		self.remotePlayer = Crafty.e('SecondPlayer').at(data.x, data.y);
+		self.remotePlayer = Crafty.e('RemotePlayer').at(data.x, data.y);
 	};
 
 	function onMovePlayer(data) {
-		console.log('moved');
-		var movePlayer;
-		if (data.id === localPlayer.id)
-			movePlayer = localPlayer;
-		else
-		 	movePlayer = remotePlayer;
+		console.log(data);
+		console.log('moved: ' + data.sid);
+		// var movePlayer;
+		// if (data.sid === localPlayer.sid)
+		// 	movePlayer = localPlayer;
+		// else
+		//  	movePlayer = remotePlayer;
 
-		movePlayer.setX(data.x);
-		movePlayer.setY(data.y);
+		self.remotePlayer.x = data.x;
+		self.remotePlayer.y = data.y;
+		console.log(self.remotePlayer);
 	};
 
 

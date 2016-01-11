@@ -11,7 +11,7 @@ Crafty.c('Grid', {
     if (x === undefined && y === undefined) {
       return { x: this.x/Settings.TILE_WIDTH, y: this.y/Settings.TILE_HEIGHT }
     } else {
-      this.attr({ x: x * Settings.TILE_WIDTH, y: y * Settings.TILE_HEIGHT });
+      this.attr({ x: x * Settings.TILE_WIDTH, y: y * Settings.TILE_HEIGHT});
       return this;
     }
   }
@@ -19,15 +19,9 @@ Crafty.c('Grid', {
 
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision, Fourway, Mouse, Keyboard')
-		.fourway(4)
+		this.requires('2D, Canvas, Grid, Collision')
         .onHit('Solid', this.die)
-        .bind('Moved', this.keepInField)
         .bind('PlayerDead', this.makeImmortal)
-		.bind('KeyDown', function() {
-			if (this.isDown('SPACE'))
-				this.shoot();
-		});
 
         this.lives = Settings.MAX_LIVES;
         this.immortal = false;
@@ -38,6 +32,7 @@ Crafty.c('Player', {
             this.x = oldPos.x;
             this.y = oldPos.y;
         }
+        socket.emit('move player', {x: this.x, y: this.y})
     },
 
     die: function() {
@@ -72,13 +67,64 @@ Crafty.c('Player', {
 	}
 });
 
-Crafty.c('FirstPlayer', {
-    init: function() {
-        this.requires('Player, spr_player');
-    }
+Crafty.c('LocalPlayer', {
+	init: function() {
+		this.requires('Player, Fourway, Mouse, Keyboard, spr_player')
+		.fourway(4)
+        .onHit('Solid', this.die)
+        .bind('Moved', this.keepInField)
+        .bind('PlayerDead', this.makeImmortal)
+		.bind('KeyDown', function() {
+			if (this.isDown('SPACE'))
+				this.shoot();
+		});
+
+        this.lives = Settings.MAX_LIVES;
+        this.immortal = false;
+	},
+
+    keepInField: function(oldPos) {
+        if (this.x + this.w >= Settings.WINDOW_WIDTH || this.x <= 0 || this.y <= 0 || this.y + this.h >= Settings.WINDOW_HEIGHT) {
+            this.x = oldPos.x;
+            this.y = oldPos.y;
+        }
+        socket.emit('move player', {x: this.x, y: this.y})
+    },
+
+    die: function() {
+        if (!this.immortal) {
+            if (this.lives == 0) {
+                Crafty.trigger('GameOver');
+            } else {
+                this.lives--;
+                console.log('lives left: ', this.lives);
+                Crafty.trigger('PlayerDead', this, this.lives);
+            }
+        }
+    },
+
+    makeImmortal: function() {
+        var self = this;
+        this.immortal = true;
+        console.log('immortal');
+        this._setInt = setInterval(function() {
+            console.log('blink');
+            self.toggleComponent('Canvas');
+        }, 500)
+        setTimeout(function () {
+            self.immortal = false;
+            console.log('not immortal');
+            clearInterval(self._setInt);
+        }, 3000);
+    },
+
+	shoot: function() {
+		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
+	}
 });
 
-Crafty.c('SecondPlayer', {
+
+Crafty.c('RemotePlayer', {
     init: function() {
         this.requires('Player, spr_player');
     }
