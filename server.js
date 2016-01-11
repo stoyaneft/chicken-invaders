@@ -22,7 +22,8 @@ function onSocketConnection(client) {
     client.on("disconnect", onClientDisconnect);
     client.on("new player", onNewPlayer);
     client.on("move player", onMovePlayer);
-    client.on('dead chicekn', onDeadChicken);
+    client.on('dead chicken', onDeadChicken);
+    client.on('player shot', onPlayerShot);
 };
 
 function onClientDisconnect() {
@@ -44,10 +45,8 @@ function onClientDisconnect() {
 
 function onNewPlayer(data) {
     util.log('New player in server')
-    console.log(data);
     if (players.length < 2) {
         var newPlayer = new Player(data.x, data.y, this.id);
-        console.log(newPlayer);
 
     	// Broadcast new player to connected socket clients
     	this.broadcast.emit("new player", {sid: newPlayer.sid, x: newPlayer.getX(), y: newPlayer.getY()});
@@ -56,7 +55,6 @@ function onNewPlayer(data) {
     	var i, existingPlayer;
     	for (i = 0; i < players.length; i++) {
     		existingPlayer = players[i];
-            console.log(existingPlayer)
     		this.emit("new player", {sid: existingPlayer.sid, x: existingPlayer.getX(), y: existingPlayer.getY()});
     	};
 
@@ -86,7 +84,13 @@ function onMovePlayer(data) {
 };
 
 function onDeadChicken(data) {
+    console.log('Dead Chicken in server');
     this.broadcast.emit("dead chicken", {id: data.id});
+}
+
+function onPlayerShot(data) {
+    console.log('Player shot: ' + data.id)
+    this.broadcast.emit('player shot', data);
 }
 
 function playerById(id) {

@@ -49,16 +49,18 @@ Crafty.c('Player', {
                 self.immortal = false;
                 console.log('not immortal');
                 clearInterval(self._setInt);
+                if (!self.has('Canvas')) {
+                    self.toggleComponent('Canvas');
+                }
             }, 3000);
-            if (!self.has('Canvas')) {
-                self.toggleComponent('Canvas');
-            }
+
             this.scoreboard.trigger('ChangeLives')
         }
     },
 
-	shoot: function() {
-		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
+    shoot: function(data) {
+        console.log('who shot: ' + data.id)
+		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2 - 5, y: this.y, w:5, h:5, playerId: data.id});
 	}
 });
 
@@ -70,10 +72,12 @@ Crafty.c('LocalPlayer', {
         .bind('Moved', this.keepInField)
         .bind('DeadPlayer', this.onDeadPlayer)
 		.bind('KeyDown', function() {
-			if (this.isDown('SPACE'))
-				this.shoot();
+			if (this.isDown('SPACE')) {
+				this.shoot({id: this.getId()});
+                socket.emit('player shot', {id: this.getId()});
+            }
 		});
-        this.scoreboard = Crafty.e("LocalScoreboard");
+        this.scoreboard = Crafty.e('LocalScoreboard');
 	},
 
     keepInField: function(oldPos) {
@@ -82,11 +86,7 @@ Crafty.c('LocalPlayer', {
             this.y = oldPos.y;
         }
         socket.emit('move player', {x: this.x, y: this.y})
-    },
-
-	shoot: function() {
-		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2, y: this.y, w:5, h:5});
-	}
+    }
 });
 
 Crafty.c('RemotePlayer', {
@@ -111,7 +111,10 @@ Crafty.c('Bullet', {
 		var chicken = data[0].obj;
 		this.destroy();
 		chicken.destroy();
-        Crafty.trigger('DeadChicken', {id: chicken.getId()});
+        Crafty.trigger('DeadChicken');
+        socket.emit('dead chicken', {id: chicken.getId()});
+        console.log(Crafty(this.playerID));
+        Crafty(this.playerId).scoreboard.trigger('ChangeScore');
 	},
 
 	mov: function(eventData) {
