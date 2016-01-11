@@ -91,6 +91,7 @@ var sprite_map = Crafty.sprite("assets/sprite_map.png", {
 	spr_egg: [64, 0, 9, 11],
 	spr_player: [76, 0, 55, 64],
 	spr_lscoreboard: [0, 64, 160, 40],
+	spr_rscoreboard: [0, 104, 160, 40],
 	spr_smoke: [133, 0, 27, 27]
 });
 

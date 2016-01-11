@@ -31,12 +31,12 @@ Crafty.c('Player', {
             } else {
                 this.lives--;
                 console.log('lives left: ', this.lives);
-                Crafty.trigger('PlayerDead', {lives: this.lives, id: this.getId()});
+                Crafty.trigger('DeadPlayer', {lives: this.lives, id: this.getId()});
             }
         }
     },
 
-    makeImmortal: function(data) {
+    onDeadPlayer: function(data) {
         if (this.getId() === data.id) {
             var self = this;
             this.immortal = true;
@@ -53,6 +53,7 @@ Crafty.c('Player', {
             if (!self.has('Canvas')) {
                 self.toggleComponent('Canvas');
             }
+            this.scoreboard.trigger('ChangeLives')
         }
     },
 
@@ -67,7 +68,7 @@ Crafty.c('LocalPlayer', {
 		.fourway(4)
         .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
-        .bind('PlayerDead', this.makeImmortal)
+        .bind('DeadPlayer', this.onDeadPlayer)
 		.bind('KeyDown', function() {
 			if (this.isDown('SPACE'))
 				this.shoot();
@@ -92,7 +93,7 @@ Crafty.c('RemotePlayer', {
     init: function() {
         this.requires('Player, spr_player')
         .onHit('Solid', this.die)
-        .bind('PlayerDead', this.makeImmortal);
+        .bind('DeadPlayer', this.onDeadPlayer);
         this.scoreboard = Crafty.e('RemoteScoreboard');
     }
 });
@@ -176,16 +177,19 @@ Crafty.c('Egg', {
 
 Crafty.c('Scoreboard', {
     init: function() {
-        this.requires('2D, DOM');
+        this.requires('2D, DOM')
+        .bind('ChangeScore', this.changeScore)
+        .bind('ChangeLives', this.changeLives);
+
         this.score = Crafty.e('Points');
         this.lives = Crafty.e('Lives');
     },
 
-    changeScore: function() {
+    changeScore: function(data) {
         this.score.changeScore();
     },
 
-    changeLives: function() {
+    changeLives: function(data) {
         this.lives.changeLives();
     }
 });
@@ -193,13 +197,22 @@ Crafty.c('Scoreboard', {
 Crafty.c('LocalScoreboard', {
     init: function() {
         this.requires('Scoreboard, spr_lscoreboard')
-        .attr({x: 0, y:0})
-        .bind('DeadChicken', this.changeScore)
-        .bind('PlayerDead', this.changeLives);
-        this.score.attr({x: 5, y:6.5, points: 0});
-        this.lives.attr({x: 125, y:6.5, lives: Settings.MAX_LIVES});
+        .attr({x: 0, y:0});
+
+        this.score.attr({x: 5, y: 6.5, points: 0});
+        this.lives.attr({x: 125, y: 6.5, lives: Settings.MAX_LIVES});
     }
 });
+
+Crafty.c('RemoteScoreboard', {
+    init: function() {
+        this.requires('Scoreboard, spr_rscoreboard')
+        .attr({x:Settings.WINDOW_WIDTH - 160, y:0});
+
+        this.score.attr({x: this.x + 15, y: this.y + 6.5, points: 0});
+        this.lives.attr({x: this.x + 125, y: this.y + 6.5, lives: Settings.MAX_LIVES})
+    }
+})
 
 Crafty.c('Points', {
     init: function() {

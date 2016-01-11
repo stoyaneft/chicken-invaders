@@ -23,7 +23,7 @@ Crafty.c('Player', {
 		.fourway(4)
         .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
-        .bind('PlayerDead', this.makeImmortal)
+        .bind('DeadPlayer', this.makeImmortal)
 		.bind('KeyDown', function() {
 			if (this.isDown('SPACE'))
 				this.shoot();
@@ -47,7 +47,7 @@ Crafty.c('Player', {
             } else {
                 this.lives--;
                 console.log('lives left: ', this.lives);
-                Crafty.trigger('PlayerDead', this, this.lives);
+                Crafty.trigger('DeadPlayer', this, this.lives);
             }
         }
     },
@@ -180,7 +180,7 @@ Crafty.c('Lives', {
         .text(Settings.MAX_LIVES)
         .textColor('white')
         .textFont({size: '20px'})
-        .bind('PlayerDead', this.changeLives);
+        .bind('DeadPlayer', this.changeLives);
     },
 
     changeLives: function() {
