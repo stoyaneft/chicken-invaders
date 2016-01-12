@@ -60,7 +60,7 @@ Crafty.scene('Game', function() {
 
 	function onPlayerShot(data) {
 		console.log('Player shot: ' + data.id)
-		self.remotePlayer.shoot({id: data.id})
+		self.remotePlayer.shoot(self.remotePlayer.getId())
 	}
 
 }, function() {

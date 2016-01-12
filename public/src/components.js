@@ -113,8 +113,13 @@ Crafty.c('Bullet', {
 		chicken.destroy();
         Crafty.trigger('DeadChicken');
         socket.emit('dead chicken', {id: chicken.getId()});
-        console.log(Crafty(this.playerID));
-        Crafty(this.playerId).scoreboard.trigger('ChangeScore');
+        console.log(this.playerID);
+        if (!Crafty(this.playerId).scoreboard) {
+            Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
+        }
+        else {
+            Crafty('LocalPlayer').scoreboard.trigger('ChangeScore');
+        }
 	},
 
 	mov: function(eventData) {
