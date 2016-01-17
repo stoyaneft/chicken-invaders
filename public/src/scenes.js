@@ -1,14 +1,19 @@
-Crafty.scene('Game', function() {
+Crafty.scene('Game', function(mode) {
+	Crafty.background("url('assets/background.png')");
 	var self = this;
 	intitalizeChickens();
 	setEventHandlers();
 	this.localPlayer = Crafty.e('LocalPlayer').at(4, 6);
-	socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
+	console.log(mode);
 
-	// var smoke = Crafty.e('Smoke').attr(coords);
-	// setTimeout(function() {
-	// 	smoke.destroy();
-	// }, 200);
+	if(mode === Settings.MULTIPLAYER) {
+		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
+		// Crafty.pause();
+		// Crafty.e('2D, DOM, Text')
+		// .text('Waiting for other player...')
+		// .textFont({size: '20px'})
+		// .attr({x: Settings.WINDOW_WIDTH/2 - 50, y:Settings.WINDOW_HEIGHT/2-10});
+	}
 
 	function intitalizeChickens() {
 		var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
@@ -24,12 +29,12 @@ Crafty.scene('Game', function() {
 	function setEventHandlers() {
 		self.bind('DeadChicken', function(coords) {
 			console.log(Crafty('Chicken').length);
-			if(!Crafty('Chicken').length) {
+			if (!Crafty('Chicken').length) {
 				// Crafty.scene('LevelCompleted');
 				console.log('LevelCompleted')
 			}
 		});
-		self.bind('GameOver', function() {
+		self.bind('game_over', function() {
 		   console.log('game over :(');
 		});
 		socket.on('disconnect', onSocketDisconnect);
@@ -37,15 +42,22 @@ Crafty.scene('Game', function() {
 		socket.on('move player', onMovePlayer);
 		socket.on('dead chicken', onDeadChicken);
 		socket.on('player shot', onPlayerShot);
+		//socket.on('all connected', onAllConnected);
 	}
 
 	function onSocketDisconnect() {
 		console.log('Disconnected from server');
 	};
 
+	function onAllConnected() {
+		Crafty.pause();
+	}
+
 	function onNewPlayer(data) {
 		console.log('New player connected: '+data.sid);
-		self.remotePlayer = Crafty.e('RemotePlayer').at(data.x, data.y);
+		console.log(data);
+		self.remotePlayer = Crafty.e('RemotePlayer').attr({x:data.x, y: data.y});
+
 	};
 
 	function onMovePlayer(data) {
@@ -72,34 +84,35 @@ Crafty.scene('LevelCompleted', function() {
 		.text('Level Completed!')
 })
 
+Crafty.scene('Menu', function() {
+	Crafty.background('black');
+	Crafty.e('Button').attr({x:200, y:200, w:200, h:40}).text(Settings.SINGLE_PLAYER);
+	Crafty.e('Button').attr({x:200, y:240, w:200, h:40}).text(Settings.MULTIPLAYER);
+})
 
 Crafty.scene('Loading', function(){
-
   Crafty.e('2D, DOM, Text')
     .text('Loading...')
 	.css($text_css);
-
-
-
   // Load our sprite map image
-var sprite_map = Crafty.sprite('assets/sprite_map.png', {
-	spr_chicken: [0, 0, 64, 64],
-	spr_egg: [64, 0, 9, 11],
-	spr_player: [76, 0, 55, 64],
-	spr_lscoreboard: [0, 64, 160, 40],
-	spr_rscoreboard: [0, 104, 160, 40],
-	spr_smoke: [133, 0, 27, 27]
-});
+	var sprite_map = Crafty.sprite('assets/sprite_map.png', {
+		spr_chicken: [0, 0, 64, 64],
+		spr_egg: [64, 0, 9, 11],
+		spr_player: [76, 0, 55, 64],
+		spr_lscoreboard: [0, 64, 160, 40],
+		spr_rscoreboard: [0, 104, 160, 40],
+		spr_smoke: [133, 0, 27, 27]
+	});
 
-  var assetsObj = {
+	var assetsObj = {
 	  'sprites': {
 		  'assets/sprite_map.png': sprite_map
 	  }
-  }
-  setTimeout(function() {Crafty.load(assetsObj, function(){
-	console.log('assets loaded');
-    // Now that our sprites are ready to draw, start the game
-    Crafty.scene('Game');
-  })
-  }, 0);
+	}
+	setTimeout(function() {Crafty.load(assetsObj, function(){
+		console.log('assets loaded');
+	// Now that our sprites are ready to draw, start the game
+		Crafty.scene('Menu');
+	})
+	}, 0);
 });

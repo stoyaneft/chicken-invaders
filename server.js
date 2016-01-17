@@ -5,8 +5,7 @@ var io = require('socket.io')(server);
 var util = require('util');
 var Player = require('./Player').Player
 
-var socket,
-    players;
+var players;
 
 function init() {
     players = [];
@@ -15,15 +14,21 @@ function init() {
 
 function setEventHandlers() {
 	io.on("connection", onSocketConnection);
+
 }
 
 function onSocketConnection(client) {
-    util.log("New player has connected: "+client.id);
+    util.log("New player has connected: " + client.id);
     client.on("disconnect", onClientDisconnect);
     client.on("new player", onNewPlayer);
     client.on("move player", onMovePlayer);
     client.on('dead chicken', onDeadChicken);
     client.on('player shot', onPlayerShot);
+    // if (players.length === 1) {
+    //     this.emit('all connected');
+    //     this.broadcast.emit('all connected');
+    // }
+
 };
 
 function onClientDisconnect() {
@@ -67,20 +72,27 @@ function onNewPlayer(data) {
 };
 
 function onMovePlayer(data) {
-    var movePlayer = playerById(this.id);
+    console.log(players);
+    if (players !== []) {
 
-	// Player not found
-	if (!movePlayer) {
-		util.log("Player not found: "+this.id);
-		return;
-	};
+        console.log('player moved');
+        var movePlayer = playerById(this.id);
 
-	// Update player position
-	movePlayer.setX(data.x);
-	movePlayer.setY(data.y);
+    	// Player not found
+    	if (!movePlayer) {
+    		util.log("Player not found: "+this.id);
+            console.log(players);
+    		return;
+    	};
 
-	// Broadcast updated position to connected socket clients
-	this.broadcast.emit("move player", {sid: movePlayer.sid, x: movePlayer.getX(), y: movePlayer.getY()});
+    	// Update player position
+    	movePlayer.setX(data.x);
+    	movePlayer.setY(data.y);
+
+    	// Broadcast updated position to connected socket clients
+    	this.broadcast.emit("move player", {sid: movePlayer.sid, x: movePlayer.getX(), y: movePlayer.getY()});
+    }
+
 };
 
 function onDeadChicken(data) {
@@ -109,7 +121,14 @@ app.get('/', function (req, res) {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-server.listen(3000, function(){
-  console.log('listening on *:3000');
+server.listen(process.env.PORT || 8080, function () {
+  var host = server.address().address;
+  var port = server.address().port;
+
+  console.log('App listening at http://%s:%s', host, port);
 });
+
+// server.listen(3000, function(){
+//   console.log('listening on *:3000');
+// });
 init();

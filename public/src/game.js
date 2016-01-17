@@ -11,14 +11,15 @@ Settings = {
 	EGG_SPEED: 3,
 	CHICKEN_SPEED: 1,
 	CHICKENS_COUNT: 32,
-	CHICKEN_ROWS: 4
+	CHICKEN_ROWS: 4,
+	SINGLE_PLAYER: 'Single player',
+	MULTIPLAYER: 'Multiplayer'
 }
 
 Game = {
   // Initialize and start our game
 	start: function() {
 		Crafty.init(Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
-		Crafty.background("url('assets/background.png')");
 		Crafty.scene('Loading');
 	}
 }
