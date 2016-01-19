@@ -112,7 +112,7 @@ Crafty.c('Bullet', {
 		this.destroy();
 		chicken.destroy();
         Crafty.trigger('DeadChicken');
-        socket.emit('dead chicken', {id: chicken.getId()});
+        socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
         console.log(this.playerID);
         if (!Crafty(this.playerId).scoreboard) {
             Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
@@ -136,10 +136,14 @@ Crafty.c('Chicken', {
 	init: function() {
 		this.requires('2D, Canvas, Grid, Solid, spr_chicken')
 		.bind('EnterFrame', this.fly)
-        .bind('EnterFrame', this.layEgg)
+        //.bind('EnterFrame', this.layEgg)
 		.bind('ChangeDirection', this.changeDirection);
 		this.speed = Settings.CHICKEN_SPEED;
 	},
+
+    setSId: function(sid) {
+        this.sid = sid;
+    },
 
 	changeDirection: function() {
         this.speed *= -1;
@@ -155,9 +159,11 @@ Crafty.c('Chicken', {
 	},
 
     layEgg: function() {
-        if (Math.random() < Settings.EGG_POSSIBILITY) {
-            Crafty.e('Egg').attr({x: this.x + Settings.TILE_WIDTH, y: this.y + Settings.TILE_HEIGHT})
-        }
+        //if (Math.random() < Settings.EGG_POSSIBILITY) {
+            var eggData = {x: this.x + Settings.TILE_WIDTH, y: this.y + Settings.TILE_HEIGHT};
+            Crafty.e('Egg').attr(eggData);
+        //    socket.emit('lay egg', eggData);
+        //}
     }
 });
 

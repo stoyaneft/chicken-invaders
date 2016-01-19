@@ -20,9 +20,9 @@ Crafty.scene('Game', function(mode) {
 		var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
 		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
 		var padding = (tile_cols - chicken_cols) / 2;
-		for (var i = 0; i < Settings.CHICKEN_ROWS; i++)
+		for (var i = 1; i <= Settings.CHICKEN_ROWS; i++)
 			for(var j = 1; j <= chicken_cols; j++) {
-				Crafty.e('Chicken').at(j, i + padding);
+				Crafty.e('Chicken').at(j, i + padding-1).setSId(i*j - 1);
 			}
 	};
 
@@ -42,6 +42,7 @@ Crafty.scene('Game', function(mode) {
 		socket.on('move player', onMovePlayer);
 		socket.on('dead chicken', onDeadChicken);
 		socket.on('player shot', onPlayerShot);
+		socket.on('lay egg', onLayEgg);
 		//socket.on('all connected', onAllConnected);
 	}
 
@@ -68,11 +69,21 @@ Crafty.scene('Game', function(mode) {
 	function onDeadChicken(data) {
 		console.log('DeadChicken');
 		Crafty(data.id).destroy();
-	}
+	};
 
 	function onPlayerShot(data) {
 		console.log('Player shot: ' + data.id)
 		self.remotePlayer.shoot(self.remotePlayer.getId())
+	};
+
+	function onLayEgg(data) {
+		console.log('Layed Egg: ', data);
+		Crafty('Chicken').each(function(i){
+			if (i == data) {
+				this.layEgg();
+			}
+		})
+
 	}
 
 }, function() {

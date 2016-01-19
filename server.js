@@ -3,18 +3,30 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var util = require('util');
-var Player = require('./Player').Player
+var Player = require('./Player').Player;
+var Chicken = require('./chicken').Chicken;
 
 var players;
 
 function init() {
     players = [];
+    chickens = Array.apply(null, Array(32)).map(function (_) {return new Chicken();});
 	setEventHandlers();
 };
 
 function setEventHandlers() {
 	io.on("connection", onSocketConnection);
 
+};
+
+function layEggs() {
+    setInterval(function() {
+        chickens.forEach(function(chicken, idx) {
+            if (chicken.isAlive() && chicken.layedEgg()) {
+                io.sockets.emit('lay egg', idx);
+            }
+        });
+    }, 200)
 }
 
 function onSocketConnection(client) {
@@ -72,10 +84,7 @@ function onNewPlayer(data) {
 };
 
 function onMovePlayer(data) {
-    console.log(players);
-    if (players !== []) {
-
-        console.log('player moved');
+    if (players.length === 2) {
         var movePlayer = playerById(this.id);
 
     	// Player not found
@@ -97,6 +106,7 @@ function onMovePlayer(data) {
 
 function onDeadChicken(data) {
     console.log('Dead Chicken in server');
+    chickens[data.sid].destroy();
     this.broadcast.emit("dead chicken", {id: data.id});
 }
 
@@ -132,3 +142,4 @@ server.listen(process.env.PORT || 8080, function () {
 //   console.log('listening on *:3000');
 // });
 init();
+layEggs();
