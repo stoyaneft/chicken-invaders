@@ -37,9 +37,7 @@ Crafty.scene('Game', function(mode) {
 				console.log('LevelCompleted')
 			}
 		});
-		self.bind('game_over', function() {
-		   console.log('game over :(');
-		});
+		socket.on('game over', onGameOver);
 		socket.on('disconnect', onSocketDisconnect);
 		socket.on('new player', onNewPlayer);
 		socket.on('move player', onMovePlayer);
@@ -86,6 +84,15 @@ Crafty.scene('Game', function(mode) {
 
 	}
 
+	function onGameOver(data) {
+		var pointsR;
+		if (mode === Settings.MULTIPLAYER)
+		 	pointsR = self.remotePlayer.scoreboard.score.points;
+		var points = {local: self.localPlayer.scoreboard.score.points, remote: pointsR};
+		var stats = {mode: mode, points: points}
+	   Crafty.scene('GameOver', stats);
+	}
+
 }, function() {
 	this.unbind('DeadChicken', this.level_completed);
 });
@@ -97,8 +104,8 @@ Crafty.scene('LevelCompleted', function() {
 
 Crafty.scene('Menu', function() {
 	Crafty.background('black');
-	Crafty.e('Button').attr({x:200, y:200, w:200, h:40}).text(Settings.SINGLE_PLAYER);
-	Crafty.e('Button').attr({x:200, y:240, w:200, h:40}).text(Settings.MULTIPLAYER);
+	Crafty.e('Button').attr({x:220, y:200, w:200, h:40}).text(Settings.SINGLE_PLAYER);
+	Crafty.e('Button').attr({x:220, y:240, w:200, h:40}).text(Settings.MULTIPLAYER);
 })
 
 Crafty.scene('Loading', function(){
@@ -126,4 +133,38 @@ Crafty.scene('Loading', function(){
 		Crafty.scene('Menu');
 	})
 	}, 0);
+});
+
+Crafty.scene('GameOver', function(stats) {
+	Crafty.background('black');
+	Crafty.e('2D, DOM, Text')
+	.attr({x: Settings.WINDOW_WIDTH/2 - 120, y: Settings.WINDOW_HEIGHT / 2 - 150, w: 300})
+	.text('Game Over')
+	.textColor('lightgreen')
+	.textFont({size: '50px'});
+	Crafty.e('2D, Canvas, spr_player')
+	.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 60, h: 60})
+	Crafty.e('2D, DOM, Text')
+	.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 300})
+	.text('- ' + stats.points.local + ' points')
+	.textColor('white')
+	.textFont({size: '40px'});
+	if (stats.mode === Settings.MULTIPLAYER) {
+		Crafty.e('2D, Canvas, spr_player')
+		.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 60, w: 60})
+		Crafty.e('2D, DOM, Text')
+		.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 300})
+		.text('- ' + stats.points.remote + ' points')
+		.textColor('white')
+		.textFont({size: '40px'});
+
+	}
+	Crafty.e('2D, DOM, Text, Keyboard')
+	.attr({x: Settings.WINDOW_WIDTH/2 - 250, y: Settings.WINDOW_HEIGHT / 2 + 150, w: 600})
+	.text('Press any key to return to main menu...')
+	.textColor('white')
+	.textFont({size: '30px', type: 'italic'})
+	.bind('KeyDown', function() {
+		Crafty.scene('Menu');
+	});
 });

@@ -26,10 +26,10 @@ Crafty.c('Player', {
 
     die: function(data) {
         if (!this.immortal) {
-            if (this.lives == 0) {
-                Crafty.trigger('GameOver');
+            this.lives--;
+            if (this.lives === 0) {
+                socket.emit('game over');
             } else {
-                this.lives--;
                 console.log('lives left: ', this.lives);
                 Crafty.trigger('DeadPlayer', {lives: this.lives, id: this.getId()});
             }
@@ -39,7 +39,8 @@ Crafty.c('Player', {
     onDeadPlayer: function(data) {
         if (this.getId() === data.id) {
             var self = this;
-            this.immortal = true;
+            if (this.lives)
+                this.immortal = true;
             console.log('immortal');
             this._setInt = setInterval(function() {
                 console.log('blink');

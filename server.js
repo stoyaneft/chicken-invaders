@@ -7,6 +7,7 @@ var Player = require('./Player').Player;
 var Chicken = require('./chicken').Chicken;
 
 var players;
+var layingEggs;
 
 function init() {
     players = [];
@@ -20,13 +21,17 @@ function setEventHandlers() {
 };
 
 function layEggs() {
-    setInterval(function() {
+    layingEggs = setInterval(function() {
         chickens.forEach(function(chicken, idx) {
             if (chicken.isAlive() && chicken.layedEgg()) {
                 io.sockets.emit('lay egg', idx);
             }
         });
     }, 200)
+}
+
+function stopEggs() {
+    clearInterval(layingEggs);
 }
 
 function onSocketConnection(client) {
@@ -37,6 +42,7 @@ function onSocketConnection(client) {
     client.on('dead chicken', onDeadChicken);
     client.on('player shot', onPlayerShot);
     client.on('all connected', onAllConnected);
+    client.on('game over', onGameOver);
 };
 
 function onClientDisconnect() {
@@ -109,6 +115,12 @@ function onDeadChicken(data) {
 function onPlayerShot(data) {
     console.log('Player shot: ' + data.id)
     this.broadcast.emit('player shot', data);
+}
+
+function onGameOver(data) {
+    console.log('Game over');
+    stopEggs();
+    io.sockets.emit('game over');
 }
 
 function onAllConnected(data) {
