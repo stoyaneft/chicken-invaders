@@ -19,7 +19,7 @@ Crafty.c('Grid', {
 
 Crafty.c('Player', {
 	init: function() {
-		this.requires('2D, Canvas, Grid, Collision');
+		this.requires('2D, Canvas, Collision')
         this.lives = Settings.MAX_LIVES;
         this.immortal = false;
 	},
@@ -68,6 +68,7 @@ Crafty.c('LocalPlayer', {
 	init: function() {
 		this.requires('Player, Fourway, Mouse, Keyboard, spr_player')
 		.fourway(4)
+    	.collision([1, 46], [10, 10], [32, 0], [51, 10], [59, 46])
         .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
         .bind('DeadPlayer', this.onDeadPlayer)
@@ -160,7 +161,7 @@ Crafty.c('Chicken', {
 
     layEgg: function() {
         //if (Math.random() < Settings.EGG_POSSIBILITY) {
-            var eggData = {x: this.x + Settings.TILE_WIDTH, y: this.y + Settings.TILE_HEIGHT};
+            var eggData = {x: this.x + Settings.TILE_WIDTH, y: this.y + Settings.TILE_HEIGHT, w: 9, h: 11};
             Crafty.e('Egg').attr(eggData);
         //    socket.emit('lay egg', eggData);
         //}
@@ -169,7 +170,8 @@ Crafty.c('Chicken', {
 
 Crafty.c('Egg', {
     init: function() {
-        this.requires('2D, Canvas, Grid, Circle, Solid, spr_egg')
+        this.requires('2D, Canvas, Solid, Collision, spr_egg')
+        .attr({x:0, y:0, w:9, h: 11})
         .bind('GroundHit', this.onGroundHit)
         .bind('EnterFrame', this.mov);
         this.speed = Settings.EGG_SPEED;

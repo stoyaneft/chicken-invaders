@@ -36,11 +36,7 @@ function onSocketConnection(client) {
     client.on("move player", onMovePlayer);
     client.on('dead chicken', onDeadChicken);
     client.on('player shot', onPlayerShot);
-    // if (players.length === 1) {
-    //     this.emit('all connected');
-    //     this.broadcast.emit('all connected');
-    // }
-
+    client.on('all connected', onAllConnected);
 };
 
 function onClientDisconnect() {
@@ -115,6 +111,10 @@ function onPlayerShot(data) {
     this.broadcast.emit('player shot', data);
 }
 
+function onAllConnected(data) {
+    layEggs();
+}
+
 function playerById(id) {
     var i;
     for (i = 0; i < players.length; i++) {
@@ -142,4 +142,3 @@ server.listen(process.env.PORT || 8080, function () {
 //   console.log('listening on *:3000');
 // });
 init();
-layEggs();

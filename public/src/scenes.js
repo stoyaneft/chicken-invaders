@@ -1,19 +1,22 @@
 Crafty.scene('Game', function(mode) {
 	Crafty.background("url('assets/background.png')");
+	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});;
+	if(mode === Settings.MULTIPLAYER) {
+		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
+		Crafty.pause();
+		this.waitingText = Crafty.e('2D, DOM, Text')
+		.text('Waiting for other player...')
+		.textFont({size: '20px'})
+		.textColor('white')
+		.attr({x: Settings.WINDOW_WIDTH/2 - 100, y:20, w:640});
+	} else {
+		socket.emit('all connected');
+	}
+
 	var self = this;
 	intitalizeChickens();
 	setEventHandlers();
-	this.localPlayer = Crafty.e('LocalPlayer').at(4, 6);
 	console.log(mode);
-
-	if(mode === Settings.MULTIPLAYER) {
-		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
-		// Crafty.pause();
-		// Crafty.e('2D, DOM, Text')
-		// .text('Waiting for other player...')
-		// .textFont({size: '20px'})
-		// .attr({x: Settings.WINDOW_WIDTH/2 - 50, y:Settings.WINDOW_HEIGHT/2-10});
-	}
 
 	function intitalizeChickens() {
 		var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
@@ -43,22 +46,19 @@ Crafty.scene('Game', function(mode) {
 		socket.on('dead chicken', onDeadChicken);
 		socket.on('player shot', onPlayerShot);
 		socket.on('lay egg', onLayEgg);
-		//socket.on('all connected', onAllConnected);
 	}
 
 	function onSocketDisconnect() {
 		console.log('Disconnected from server');
 	};
 
-	function onAllConnected() {
-		Crafty.pause();
-	}
-
 	function onNewPlayer(data) {
 		console.log('New player connected: '+data.sid);
 		console.log(data);
 		self.remotePlayer = Crafty.e('RemotePlayer').attr({x:data.x, y: data.y});
-
+		Crafty.pause();
+		self.waitingText.destroy();
+		socket.emit('all connected');
 	};
 
 	function onMovePlayer(data) {
