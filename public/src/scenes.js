@@ -33,8 +33,8 @@ Crafty.scene('Game', function(mode) {
 		self.bind('DeadChicken', function(coords) {
 			console.log(Crafty('Chicken').length);
 			if (!Crafty('Chicken').length) {
-				// Crafty.scene('LevelCompleted');
-				console.log('LevelCompleted')
+				Crafty('2D, DOM, Text')
+				.
 			}
 		});
 		socket.on('game over', onGameOver);

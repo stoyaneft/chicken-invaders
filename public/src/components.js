@@ -111,11 +111,12 @@ Crafty.c('Bullet', {
 
 	damageChicken: function(data) {
 		var chicken = data[0].obj;
+        chicken.health -= Settings.BULLET_DAMAGE;
+        if (chicken.health <= 0)
+            chicken.destroy();
 		this.destroy();
-		chicken.destroy();
         Crafty.trigger('DeadChicken');
         socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
-        console.log(this.playerID);
         if (!Crafty(this.playerId).scoreboard) {
             Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
         }
@@ -141,6 +142,7 @@ Crafty.c('Chicken', {
         //.bind('EnterFrame', this.layEgg)
 		.bind('ChangeDirection', this.changeDirection);
 		this.speed = Settings.CHICKEN_SPEED;
+        this.health = 100;
 	},
 
     setSId: function(sid) {
