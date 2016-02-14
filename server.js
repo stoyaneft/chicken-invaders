@@ -5,6 +5,7 @@ var io = require('socket.io')(server);
 var util = require('util');
 var Player = require('./Player').Player;
 var Chicken = require('./chicken').Chicken;
+var levels = require('./levels.json')
 
 var players;
 var layingEggs;
@@ -43,6 +44,7 @@ function onSocketConnection(client) {
     client.on('player shot', onPlayerShot);
     client.on('all connected', onAllConnected);
     client.on('game over', onGameOver);
+    client.emit('connected', levels);
 };
 
 function onClientDisconnect() {

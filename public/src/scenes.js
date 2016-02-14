@@ -24,7 +24,7 @@ Crafty.scene('Game', function(mode) {
 		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
 		var padding = (tile_cols - chicken_cols) / 2;
 		for (var i = 1; i <= Settings.CHICKEN_ROWS; i++)
-			for(var j = 1; j <= chicken_cols; j++) {
+			for(var j = 1; j <= 1; j++) {
 				Crafty.e('Chicken').at(j, i + padding-1).setSId(i*j - 1);
 			}
 	};
@@ -33,8 +33,11 @@ Crafty.scene('Game', function(mode) {
 		self.bind('DeadChicken', function(coords) {
 			console.log(Crafty('Chicken').length);
 			if (!Crafty('Chicken').length) {
-				Crafty('2D, DOM, Text')
-				.
+				Crafty.e('2D, DOM, Text')
+				.attr({x: Settings.WINDOW_WIDTH/2 - 200, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 600})
+				.text('Level Completed!')
+				.textColor('lightgreen')
+				.textFont({size: '50px'});
 			}
 		});
 		socket.on('game over', onGameOver);
