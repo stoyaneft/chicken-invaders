@@ -6,7 +6,6 @@ var util = require('util');
 var Player = require('./Player').Player;
 var Chicken = require('./chicken').Chicken;
 var levels = require('./levels.json')
-
 var players;
 var layingEggs;
 
@@ -37,6 +36,7 @@ function stopEggs() {
 
 function onSocketConnection(client) {
     util.log("New player has connected: " + client.id);
+    client.on('connect', onClientConnect);
     client.on("disconnect", onClientDisconnect);
     client.on("new player", onNewPlayer);
     client.on("move player", onMovePlayer);
@@ -44,8 +44,13 @@ function onSocketConnection(client) {
     client.on('player shot', onPlayerShot);
     client.on('all connected', onAllConnected);
     client.on('game over', onGameOver);
-    client.emit('connected', levels);
+    client.on('level completed', onLevelCompleted);
 };
+
+function onClientConnect() {
+    console.log('PEDERAST');
+    this.emit('connect', levels);
+}
 
 function onClientDisconnect() {
     util.log("Player has disconnected: "+this.id);
@@ -119,10 +124,16 @@ function onPlayerShot(data) {
     this.broadcast.emit('player shot', data);
 }
 
-function onGameOver(data) {
+function onGameOver() {
     console.log('Game over');
     stopEggs();
     io.sockets.emit('game over');
+}
+
+function onLevelCompleted() {
+    console.log('Level completed');
+    stopEggs();
+    io.sockets.emit('level completed');
 }
 
 function onAllConnected(data) {
@@ -152,7 +163,4 @@ server.listen(process.env.PORT || 8080, function () {
   console.log('App listening at http://%s:%s', host, port);
 });
 
-// server.listen(3000, function(){
-//   console.log('listening on *:3000');
-// });
 init();
