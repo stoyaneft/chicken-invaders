@@ -112,17 +112,19 @@ Crafty.c('Bullet', {
 	damageChicken: function(data) {
 		var chicken = data[0].obj;
         chicken.health -= Settings.BULLET_DAMAGE;
-        if (chicken.health <= 0)
+        if (chicken.health <= 0) {
             chicken.destroy();
+            if (!Crafty(this.playerId).scoreboard) {
+                Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
+            }
+            else {
+                Crafty('LocalPlayer').scoreboard.trigger('ChangeScore');
+            }            
+            Crafty.trigger('DeadChicken');
+            socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
+        }
 		this.destroy();
-        Crafty.trigger('DeadChicken');
-        socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
-        if (!Crafty(this.playerId).scoreboard) {
-            Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
-        }
-        else {
-            Crafty('LocalPlayer').scoreboard.trigger('ChangeScore');
-        }
+
 	},
 
 	mov: function(eventData) {
@@ -189,7 +191,6 @@ Crafty.c('Egg', {
     },
 
     onGroundHit: function() {
-        console.log('hitted ground');
         this.destroy();
     }
 });
@@ -323,7 +324,8 @@ Crafty.c("Button", {
     },
 
     onMouseClick: function() {
-        Crafty.scene('Game', this.mode);
+        console.log(this);
+        Crafty.scene('Game', {mode: this.mode, level: this.lvl});
     }
 
 });

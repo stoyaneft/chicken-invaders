@@ -19,9 +19,9 @@ Settings = {
 
 Game = {
   // Initialize and start our game
-	start: function() {
+	start: function(level) {
 		Crafty.init(Settings.WINDOW_WIDTH, Settings.WINDOW_HEIGHT);
-		Crafty.scene('Loading');
+		Crafty.scene('Loading', level);
 	}
 }
 

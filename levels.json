@@ -1,7 +1,7 @@
 {
     "1": {
         "rows": 4,
-		"cols": 8,
+		"cols": 1,
 		"health": 100,
 		"egg_speed": 3,
 		"egg_possibility": 0.001

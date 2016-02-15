@@ -8,10 +8,16 @@ var Chicken = require('./chicken').Chicken;
 var levels = require('./levels.json')
 var players;
 var layingEggs;
+var level = 1;
+var egg_possibility;
 
-function init() {
+function loadLevel(level) {
     players = [];
-    chickens = Array.apply(null, Array(32)).map(function (_) {return new Chicken();});
+    var lvl = levels[level];
+    var rows = parseInt(lvl.rows);
+    var cols = parseInt(lvl.cols);
+    var egg_possibility = lvl.egg_possibility;
+    chickens = Array.apply(null, Array(rows*cols)).map(function (_) {return new Chicken();});
 	setEventHandlers();
 };
 
@@ -36,7 +42,6 @@ function stopEggs() {
 
 function onSocketConnection(client) {
     util.log("New player has connected: " + client.id);
-    client.on('connect', onClientConnect);
     client.on("disconnect", onClientDisconnect);
     client.on("new player", onNewPlayer);
     client.on("move player", onMovePlayer);
@@ -45,12 +50,8 @@ function onSocketConnection(client) {
     client.on('all connected', onAllConnected);
     client.on('game over', onGameOver);
     client.on('level completed', onLevelCompleted);
+    client.emit('level loaded', levels[level]);
 };
-
-function onClientConnect() {
-    console.log('PEDERAST');
-    this.emit('connect', levels);
-}
 
 function onClientDisconnect() {
     util.log("Player has disconnected: "+this.id);
@@ -133,7 +134,13 @@ function onGameOver() {
 function onLevelCompleted() {
     console.log('Level completed');
     stopEggs();
-    io.sockets.emit('level completed');
+    level++;
+    if (level === levels.length) {
+        console.log('Last level loaded')
+        levels[level].isLast = true;
+    }
+    loadLevel(level);
+    io.sockets.emit('level completed', levels[level]);
 }
 
 function onAllConnected(data) {
@@ -163,4 +170,4 @@ server.listen(process.env.PORT || 8080, function () {
   console.log('App listening at http://%s:%s', host, port);
 });
 
-init();
+loadLevel(1);
