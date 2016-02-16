@@ -3,10 +3,11 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var util = require('util');
-var Player = require('./Player').Player;
+var Player = require('./player').Player;
 var Chicken = require('./chicken').Chicken;
 var levels = require('./levels.json')
 var players = [];
+var chickens = [];
 var layingEggs;
 var level = 1;
 var egg_possibility;
@@ -15,9 +16,11 @@ function loadLevel(level) {
     var lvl = levels[level];
     var rows = parseInt(lvl.rows);
     var cols = parseInt(lvl.cols);
-    var egg_possibility = lvl.egg_possibility;
-    chickens = Array.apply(null, Array(rows*cols)).map(function (_) {return new Chicken();});
+    var egg_psb = lvl.egg_possibility;
+    chickens = Array.apply(null, Array(rows*cols)).map(function (_) {return new Chicken(egg_psb);});
 	setEventHandlers();
+    if (level > 1)
+        layEggs();
 };
 
 function setEventHandlers() {
@@ -114,7 +117,7 @@ function onMovePlayer(data) {
 };
 
 function onDeadChicken(data) {
-    chickens[data.sid].destroy();
+    chickens[data.sid].destroy();   
     this.broadcast.emit("dead chicken", {id: data.id});
 }
 

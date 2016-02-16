@@ -1,18 +1,18 @@
 {
     "1": {
-        "rows": 4,
-		"cols": 1,
+        "rows": 3,
+		"cols": 4,
 		"health": 100,
 		"egg_speed": 3,
-		"egg_possibility": 0.001
+		"egg_possibility": 0.01
     },
 
     "2": {
-        "rows": 2,
-		"cols": 4,
+        "rows": 4,
+		"cols": 5,
 		"health": 150,
 		"egg_speed": 4,
-		"egg_possibility": 0.005,
+		"egg_possibility": 0.025,
         "last": true
     }
 }

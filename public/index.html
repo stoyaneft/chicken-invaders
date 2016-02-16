@@ -3,13 +3,17 @@
 <head>
     <script src="lib/crafty/dist/crafty.js"></script>
     <script src="src/game.js"></script>
-    <script src="src/scenes.js"></script>
-    <script src="src/components.js"></script>
+    <script src="src/scenes/preGame.js"></script>
+    <script src="src/scenes/game.js"></script>
+    <script src="src/scenes/gameOver.js"></script>
+    <script src="src/components/player.js"></script>
+    <script src="src/components/chicken.js"></script>
+    <script src="src/components/scoreboard.js"></script>
+    <script src="src/components/menu.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect();
         socket.on('level loaded', Game.start);
-        //window.addEventListener('load', Game.start);
     </script>
 
 </head>

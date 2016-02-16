@@ -6,7 +6,6 @@ Crafty.scene('Game', function(game) {
 	console.log(game);
 	Crafty.background("url('assets/background.png')");
 	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});
-	//this.localPlayer.setPoints(game.stats.points.local);
 
 	if(game.mode === Settings.MULTIPLAYER) {
 		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
@@ -39,21 +38,21 @@ Crafty.scene('Game', function(game) {
 		var padding = (tile_cols - chicken_cols) / 2;
 		for (var i = 1; i <=level.rows; i++)
 			for(var j = 1; j <= level.cols; j++) {
-				Crafty.e('Chicken').at(j, i + padding-1).setSId(i*j - 1);
+				Crafty.e('Chicken').attr({egg_speed: level.egg_speed})
+				.at(j, i + padding-1).setSId(i*j - 1)
 			}
 	};
 
 	function setEventHandlers() {
-		self.bind('DeadChicken', onDeadChicken);
+		self.bind('dead chicken', onDeadChicken);
 		self.bind('level completed', onLevelCompleted);
 		socket.on('disconnect', onSocketDisconnect);
 		socket.on('new player', onNewPlayer);
 		socket.on('move player', onMovePlayer);
-		socket.on('dead chicken', onDeadChicken);
+		socket.on('dead chicken', onDeadChickenServer);
 		socket.on('player shot', onPlayerShot);
 		socket.on('lay egg', onLayEgg);
 		socket.on('game over', onGameOver);
-		//socket.on('level completed', onLevelCompleted);
 	}
 
 	function onSocketDisconnect() {
@@ -62,7 +61,6 @@ Crafty.scene('Game', function(game) {
 
 	function onNewPlayer(data) {
 		console.log('New player connected: '+ data.sid);
-		console.log(data);
 		self.remotePlayer = Crafty.e('RemotePlayer').attr({x: data.x, y: data.y});
 		//self.remotePlayer.setPoints(game.stats.points.remote);
 		Crafty.pause();
@@ -75,9 +73,16 @@ Crafty.scene('Game', function(game) {
 		self.remotePlayer.y = data.y;
 	};
 
-	function onDeadChicken(data) {
-		console.log('DeadChicken');
+	function onDeadChickenServer(data) {
 		Crafty(data.id).destroy();
+	};
+
+	function onDeadChicken(data) {
+		console.log(Crafty('Chicken').length);
+		if (!Crafty('Chicken').length) {
+			socket.emit('level completed');
+			Crafty.trigger('level completed');
+		}
 	};
 
 	function onPlayerShot(data) {
@@ -90,14 +95,6 @@ Crafty.scene('Game', function(game) {
 				this.layEgg();
 			}
 		})
-	}
-
-	function onDeadChicken() {
-		console.log(Crafty('Chicken').length);
-		if (!Crafty('Chicken').length) {
-			socket.emit('level completed');
-			Crafty.trigger('level completed');
-		}
 	}
 
 	function getStats() {
@@ -119,7 +116,7 @@ Crafty.scene('Game', function(game) {
 	function onLevelCompleted() {
 		var congratzMsg = Crafty.e('2D, DOM, Text')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 200, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 600})
-		.text('Level Completed!')
+		.text('Level ' + current_lvl + ' Completed!')
 		.textColor('lightgreen')
 		.textFont({size: '50px'});
 		setTimeout(function() {
@@ -136,76 +133,4 @@ Crafty.scene('Game', function(game) {
 		}, 2000);
 	}
 
-});
-
-Crafty.scene('Menu', function(levels) {
-	Crafty.background('black');
-	Crafty.e('Button').attr({x:220, y:200, w:200, h:40, lvls: levels}).text(Settings.SINGLE_PLAYER);
-	Crafty.e('Button').attr({x:220, y:240, w:200, h:40, lvls: levels}).text(Settings.MULTIPLAYER);
-})
-
-Crafty.scene('Loading', function(levels){
-  	Crafty.e('2D, DOM, Text')
-    .text('Loading...')
-	.css($text_css);
-  // Load our sprite map image
-	var sprite_map = Crafty.sprite('assets/sprite_map.png', {
-		spr_chicken: [0, 0, 64, 64],
-		spr_egg: [64, 0, 9, 11],
-		spr_player: [76, 0, 55, 64],
-		spr_lscoreboard: [0, 64, 160, 40],
-		spr_rscoreboard: [0, 104, 160, 40],
-		spr_smoke: [133, 0, 27, 27]
-	});
-
-	var assetsObj = {
-	  'sprites': {
-		  'assets/sprite_map.png': sprite_map
-	  }
-	}
-	Crafty.load(assetsObj, function(){
-		console.log('assets loaded');
-	// Now that our sprites are ready to draw, start the game
-		Crafty.scene('Menu', levels);
-	});
-});
-
-Crafty.scene('GameOver', function(game) {
-	console.log(game);
-	var msg = 'Game Over';
-	if (game.stats.win)
-	 	msg = 'You win!!!'
-
-	Crafty.background('black');
-	Crafty.e('2D, DOM, Text')
-	.attr({x: Settings.WINDOW_WIDTH/2 - 120, y: Settings.WINDOW_HEIGHT / 2 - 150, w: 300})
-	.text(msg)
-	.textColor('lightgreen')
-	.textFont({size: '50px'});
-	Crafty.e('2D, Canvas, spr_player')
-	.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 60, h: 60})
-	Crafty.e('2D, DOM, Text')
-	.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 300})
-	.text('- ' + game.stats.points.local + ' points')
-	.textColor('white')
-	.textFont({size: '40px'});
-	if (game.stats.mode === Settings.MULTIPLAYER) {
-		Crafty.e('2D, Canvas, spr_player')
-		.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 60, w: 60})
-		Crafty.e('2D, DOM, Text')
-		.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 300})
-		.text('- ' + game.stats.points.remote + ' points')
-		.textColor('white')
-		.textFont({size: '40px'});
-
-	}
-	Crafty.e('2D, DOM, Text, Keyboard')
-	.attr({x: Settings.WINDOW_WIDTH/2 - 250, y: Settings.WINDOW_HEIGHT / 2 + 150, w: 600})
-	.text('Press any key to return to main menu...')
-	.textColor('white')
-	.textFont({size: '30px', type: 'italic'})
-	.bind('KeyDown', function() {
-		game.win = false;
-		Crafty.scene('Menu', game.levels);
-	});
 });

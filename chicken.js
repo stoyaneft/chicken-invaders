@@ -1,6 +1,5 @@
-require
 
-function Chicken() {
+function Chicken(egg_possibility) {
 	var isAlive = true;
 
 	function destroy(){
@@ -12,7 +11,7 @@ function Chicken() {
 	}
 
 	function layedEgg() {
-		return Math.random() < 0.01;
+		return Math.random() < egg_possibility;
 	}
 
 	// Define which variables and methods can be accessed
