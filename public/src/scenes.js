@@ -1,9 +1,14 @@
 Crafty.scene('Game', function(game) {
 	var self = this;
+	var level = 1;
 	setEventHandlers();
 	console.log(game.mode);
+	console.log(game);
 	Crafty.background("url('assets/background.png')");
-	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});;
+	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});
+	this.localPlayer.setPoints(game.stats.points.local);
+
+	var level = game.levels[game.current];
 	if(game.mode === Settings.MULTIPLAYER) {
 		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
 		Crafty.pause();
@@ -23,19 +28,15 @@ Crafty.scene('Game', function(game) {
 		var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
 		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
 		var padding = (tile_cols - chicken_cols) / 2;
-		for (var i = 1; i <= game.level.rows; i++)
-			for(var j = 1; j <= game.level.cols; j++) {
+		for (var i = 1; i <=level.rows; i++)
+			for(var j = 1; j <= level.cols; j++) {
 				Crafty.e('Chicken').at(j, i + padding-1).setSId(i*j - 1);
 			}
 	};
 
 	function setEventHandlers() {
-		self.bind('DeadChicken', function(coords) {
-			console.log(Crafty('Chicken').length);
-			if (!Crafty('Chicken').length) {
-				socket.emit('level completed');
-			}
-		});
+		self.bind('DeadChicken', onDeadChicken);
+		self.bind('level completed', onLevelCompleted);
 		socket.on('disconnect', onSocketDisconnect);
 		socket.on('new player', onNewPlayer);
 		socket.on('move player', onMovePlayer);
@@ -43,7 +44,7 @@ Crafty.scene('Game', function(game) {
 		socket.on('player shot', onPlayerShot);
 		socket.on('lay egg', onLayEgg);
 		socket.on('game over', onGameOver);
-		socket.on('level completed', onLevelCompleted);
+		//socket.on('level completed', onLevelCompleted);
 	}
 
 	function onSocketDisconnect() {
@@ -54,6 +55,7 @@ Crafty.scene('Game', function(game) {
 		console.log('New player connected: '+data.sid);
 		console.log(data);
 		self.remotePlayer = Crafty.e('RemotePlayer').attr({x:data.x, y: data.y});
+		self.remotePlayer.setPoints(game.stats.points.remote);
 		Crafty.pause();
 		self.waitingText.destroy();
 		socket.emit('all connected');
@@ -70,7 +72,6 @@ Crafty.scene('Game', function(game) {
 	};
 
 	function onPlayerShot(data) {
-		console.log('Player shot: ' + data.id)
 		self.remotePlayer.shoot(self.remotePlayer.getId())
 	};
 
@@ -82,46 +83,55 @@ Crafty.scene('Game', function(game) {
 		})
 	}
 
-	function onGameOver(data) {
+	function onDeadChicken() {
+		console.log(Crafty('Chicken').length);
+		if (!Crafty('Chicken').length) {
+			socket.emit('level completed');
+			Crafty.trigger('level completed');
+		}
+	}
+
+	function getStats() {
 		var pointsR;
 		if (game.mode === Settings.MULTIPLAYER)
 		 	pointsR = self.remotePlayer.scoreboard.score.points;
 		var points = {local: self.localPlayer.scoreboard.score.points, remote: pointsR};
 		var stats = {mode: game.mode, points: points}
+		return stats;
+	}
+
+	function onGameOver(data) {
+		var stats = getStats();
 	   Crafty.scene('GameOver', stats);
 	}
 
-	function onLevelCompleted(level) {
-		console.log(level)
+	function onLevelCompleted() {
 		Crafty.e('2D, DOM, Text')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 200, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 600})
 		.text('Level Completed!')
 		.textColor('lightgreen')
 		.textFont({size: '50px'});
-		if (level.isLast) {
-			console.log('You won');
-		} else {
-			Crafty.scene('Game', game);
-		}
+		setTimeout(function() {
+			game.stats = getStats();
+			if (game.levels[game.current].last) {
+				game.stats.win = true;
+				Crafty.scene('GameOver', game.stats);
+			} else {
+				game.current++;
+				Crafty.scene('Game', game);
+			}
+		}, 2000);
 	}
 
-}, function() {
-	this.unbind('DeadChicken', this.level_completed);
 });
 
-Crafty.scene('LevelCompleted', function() {
-	Crafty.e('2D, DOM, Text')
-		.text('Level Completed!')
-})
-
-Crafty.scene('Menu', function(level) {
-	console.log(level);
+Crafty.scene('Menu', function(levels) {
 	Crafty.background('black');
-	Crafty.e('Button').attr({x:220, y:200, w:200, h:40, lvl: level}).text(Settings.SINGLE_PLAYER);
-	Crafty.e('Button').attr({x:220, y:240, w:200, h:40, lvl: level}).text(Settings.MULTIPLAYER);
+	Crafty.e('Button').attr({x:220, y:200, w:200, h:40, lvls: levels}).text(Settings.SINGLE_PLAYER);
+	Crafty.e('Button').attr({x:220, y:240, w:200, h:40, lvls: levels}).text(Settings.MULTIPLAYER);
 })
 
-Crafty.scene('Loading', function(level){
+Crafty.scene('Loading', function(levels){
   	Crafty.e('2D, DOM, Text')
     .text('Loading...')
 	.css($text_css);
@@ -143,15 +153,19 @@ Crafty.scene('Loading', function(level){
 	Crafty.load(assetsObj, function(){
 		console.log('assets loaded');
 	// Now that our sprites are ready to draw, start the game
-		Crafty.scene('Menu', level);
+		Crafty.scene('Menu', levels);
 	});
 });
 
 Crafty.scene('GameOver', function(stats) {
+	var msg = 'Game Over';
+	if (stats.win)
+	 	msg = 'You win!!!'
+
 	Crafty.background('black');
 	Crafty.e('2D, DOM, Text')
 	.attr({x: Settings.WINDOW_WIDTH/2 - 120, y: Settings.WINDOW_HEIGHT / 2 - 150, w: 300})
-	.text('Game Over')
+	.text(msg)
 	.textColor('lightgreen')
 	.textFont({size: '50px'});
 	Crafty.e('2D, Canvas, spr_player')

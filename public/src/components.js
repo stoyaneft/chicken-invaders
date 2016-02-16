@@ -21,8 +21,13 @@ Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Collision')
         this.lives = Settings.MAX_LIVES;
+        //this.points = this.points | 0;
         this.immortal = false;
 	},
+
+    setPoints: function(points) {
+        this.scoreboard.set(points);
+    },
 
     die: function(data) {
         if (!this.immortal) {
@@ -60,7 +65,6 @@ Crafty.c('Player', {
     },
 
     shoot: function(data) {
-        console.log('who shot: ' + data.id)
 		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2 - 5, y: this.y, w:5, h:5, playerId: data.id});
 	}
 });
@@ -81,6 +85,10 @@ Crafty.c('LocalPlayer', {
 		});
         this.scoreboard = Crafty.e('LocalScoreboard');
 	},
+
+    setPoints: function(points) {
+        this.scoreboard.set(points);
+    },
 
     keepInField: function(oldPos) {
         if (this.x + this.w >= Settings.WINDOW_WIDTH || this.x <= 0 || this.y <= 0 || this.y + this.h >= Settings.WINDOW_HEIGHT) {
@@ -119,7 +127,7 @@ Crafty.c('Bullet', {
             }
             else {
                 Crafty('LocalPlayer').scoreboard.trigger('ChangeScore');
-            }            
+            }
             Crafty.trigger('DeadChicken');
             socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
         }
@@ -205,6 +213,10 @@ Crafty.c('Scoreboard', {
         this.lives = Crafty.e('Lives');
     },
 
+    set: function(newScore) {
+        this.score.set(newScore);
+    },
+
     changeScore: function(data) {
         this.score.changeScore();
     },
@@ -240,7 +252,11 @@ Crafty.c('Points', {
         .text(0)
         .textColor('white')
         .textFont({size: '20px'})
-        //.css({'font-size': '50px', 'color': 'white'});
+    },
+
+    set: function(newScore) {
+        this.points = newScore;
+        this.text(this.points);
     },
 
     changeScore: function() {
@@ -324,8 +340,7 @@ Crafty.c("Button", {
     },
 
     onMouseClick: function() {
-        console.log(this);
-        Crafty.scene('Game', {mode: this.mode, level: this.lvl});
+        Crafty.scene('Game', {mode: this.mode, levels: this.lvls, current: 1, stats: {mode: this.mode, points: {local: 0, remote: 0}}});
     }
 
 });

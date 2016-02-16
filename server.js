@@ -6,13 +6,12 @@ var util = require('util');
 var Player = require('./Player').Player;
 var Chicken = require('./chicken').Chicken;
 var levels = require('./levels.json')
-var players;
+var players = [];
 var layingEggs;
 var level = 1;
 var egg_possibility;
 
 function loadLevel(level) {
-    players = [];
     var lvl = levels[level];
     var rows = parseInt(lvl.rows);
     var cols = parseInt(lvl.cols);
@@ -50,7 +49,7 @@ function onSocketConnection(client) {
     client.on('all connected', onAllConnected);
     client.on('game over', onGameOver);
     client.on('level completed', onLevelCompleted);
-    client.emit('level loaded', levels[level]);
+    client.emit('level loaded', levels);
 };
 
 function onClientDisconnect() {
@@ -134,13 +133,14 @@ function onGameOver() {
 function onLevelCompleted() {
     console.log('Level completed');
     stopEggs();
-    level++;
-    if (level === levels.length) {
+    if (levels[level].last) {
         console.log('Last level loaded')
-        levels[level].isLast = true;
+    } else {
+        level++;
+        loadLevel(level);
     }
-    loadLevel(level);
-    io.sockets.emit('level completed', levels[level]);
+
+    //io.sockets.emit('level completed', levels[level]);
 }
 
 function onAllConnected(data) {
