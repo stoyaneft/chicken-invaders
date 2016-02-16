@@ -340,7 +340,7 @@ Crafty.c("Button", {
     },
 
     onMouseClick: function() {
-        Crafty.scene('Game', {mode: this.mode, levels: this.lvls, current: 1, stats: {mode: this.mode, points: {local: 0, remote: 0}}});
+        Crafty.scene('Game', {mode: this.mode, levels: this.lvls});
     }
 
 });

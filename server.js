@@ -114,13 +114,11 @@ function onMovePlayer(data) {
 };
 
 function onDeadChicken(data) {
-    console.log('Dead Chicken in server');
     chickens[data.sid].destroy();
     this.broadcast.emit("dead chicken", {id: data.id});
 }
 
 function onPlayerShot(data) {
-    console.log('Player shot: ' + data.id)
     this.broadcast.emit('player shot', data);
 }
 

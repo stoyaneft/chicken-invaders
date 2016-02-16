@@ -1,14 +1,13 @@
 Crafty.scene('Game', function(game) {
 	var self = this;
-	var level = 1;
+	var current_lvl = 1;
 	setEventHandlers();
 	console.log(game.mode);
 	console.log(game);
 	Crafty.background("url('assets/background.png')");
 	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});
-	this.localPlayer.setPoints(game.stats.points.local);
+	//this.localPlayer.setPoints(game.stats.points.local);
 
-	var level = game.levels[game.current];
 	if(game.mode === Settings.MULTIPLAYER) {
 		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
 		Crafty.pause();
@@ -23,7 +22,17 @@ Crafty.scene('Game', function(game) {
 
 	intitalizeChickens();
 
+	function resetPlayersPositions() {
+		Crafty('LocalPlayer').attr({x:200, y:400});
+		if (game.mode === Settings.MULTIPLAYER) {
+			Crafty('RemotePlayer').attr({x:200, y:400});
+		}
+	}
+
 	function intitalizeChickens() {
+		console.log(current_lvl);
+		level = game.levels[current_lvl];
+		console.log(level);
 		var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
 		var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
 		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
@@ -52,10 +61,10 @@ Crafty.scene('Game', function(game) {
 	};
 
 	function onNewPlayer(data) {
-		console.log('New player connected: '+data.sid);
+		console.log('New player connected: '+ data.sid);
 		console.log(data);
-		self.remotePlayer = Crafty.e('RemotePlayer').attr({x:data.x, y: data.y});
-		self.remotePlayer.setPoints(game.stats.points.remote);
+		self.remotePlayer = Crafty.e('RemotePlayer').attr({x: data.x, y: data.y});
+		//self.remotePlayer.setPoints(game.stats.points.remote);
 		Crafty.pause();
 		self.waitingText.destroy();
 		socket.emit('all connected');
@@ -102,23 +111,27 @@ Crafty.scene('Game', function(game) {
 
 	function onGameOver(data) {
 		var stats = getStats();
-	   Crafty.scene('GameOver', stats);
+		stats.win = false;
+		game.stats = stats;
+	   Crafty.scene('GameOver', game);
 	}
 
 	function onLevelCompleted() {
-		Crafty.e('2D, DOM, Text')
+		var congratzMsg = Crafty.e('2D, DOM, Text')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 200, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 600})
 		.text('Level Completed!')
 		.textColor('lightgreen')
 		.textFont({size: '50px'});
 		setTimeout(function() {
+			congratzMsg.destroy();
 			game.stats = getStats();
-			if (game.levels[game.current].last) {
+			if (game.levels[current_lvl].last) {
 				game.stats.win = true;
-				Crafty.scene('GameOver', game.stats);
+				Crafty.scene('GameOver', game);
 			} else {
-				game.current++;
-				Crafty.scene('Game', game);
+				current_lvl++;
+				resetPlayersPositions();
+				intitalizeChickens();
 			}
 		}, 2000);
 	}
@@ -157,9 +170,10 @@ Crafty.scene('Loading', function(levels){
 	});
 });
 
-Crafty.scene('GameOver', function(stats) {
+Crafty.scene('GameOver', function(game) {
+	console.log(game);
 	var msg = 'Game Over';
-	if (stats.win)
+	if (game.stats.win)
 	 	msg = 'You win!!!'
 
 	Crafty.background('black');
@@ -172,15 +186,15 @@ Crafty.scene('GameOver', function(stats) {
 	.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 60, h: 60})
 	Crafty.e('2D, DOM, Text')
 	.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 - 50, w: 300})
-	.text('- ' + stats.points.local + ' points')
+	.text('- ' + game.stats.points.local + ' points')
 	.textColor('white')
 	.textFont({size: '40px'});
-	if (stats.mode === Settings.MULTIPLAYER) {
+	if (game.stats.mode === Settings.MULTIPLAYER) {
 		Crafty.e('2D, Canvas, spr_player')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 150, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 60, w: 60})
 		Crafty.e('2D, DOM, Text')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 80, y: Settings.WINDOW_HEIGHT / 2 + 30, w: 300})
-		.text('- ' + stats.points.remote + ' points')
+		.text('- ' + game.stats.points.remote + ' points')
 		.textColor('white')
 		.textFont({size: '40px'});
 
@@ -191,6 +205,7 @@ Crafty.scene('GameOver', function(stats) {
 	.textColor('white')
 	.textFont({size: '30px', type: 'italic'})
 	.bind('KeyDown', function() {
-		Crafty.scene('Menu');
+		game.win = false;
+		Crafty.scene('Menu', game.levels);
 	});
 });
