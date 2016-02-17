@@ -107,7 +107,6 @@ function onMovePlayer(data) {
     	// Player not found
     	if (!movePlayer) {
     		util.log("Player not found: "+this.id);
-            console.log(players);
     		return;
     	};
 

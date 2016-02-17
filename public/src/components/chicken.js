@@ -22,7 +22,7 @@ Crafty.c('Chicken', {
 		this.requires('2D, Canvas, Grid, Solid, spr_chicken')
 		.bind('EnterFrame', this.fly)
         //.bind('EnterFrame', this.layEgg)
-		.bind('ChangeDirection', this.changeDirection);
+		.bind('change direction', this.changeDirection);
 		this.speed = Settings.CHICKEN_SPEED;
         this.health = 100;
 	},
@@ -38,7 +38,7 @@ Crafty.c('Chicken', {
 
 	fly: function() {
 		if (this.x <= 0 || this.x + Settings.TILE_WIDTH >= Settings.WINDOW_WIDTH) {
-			Crafty('Chicken').trigger('ChangeDirection');
+			Crafty('Chicken').trigger('change direction');
         } else {
 			this.x += this.speed;
 		}
