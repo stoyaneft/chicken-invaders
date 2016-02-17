@@ -12,7 +12,7 @@ Crafty.c('Player', {
                 socket.emit('game over');
             } else {
                 console.log('lives left: ', this.lives);
-                Crafty.trigger('DeadPlayer', {lives: this.lives, id: this.getId()});
+                Crafty.trigger('dead player', {lives: this.lives, id: this.getId()});
             }
         }
     },
@@ -53,7 +53,7 @@ Crafty.c('LocalPlayer', {
     	.collision([1, 46], [10, 10], [32, 0], [51, 10], [59, 46])
         .onHit('Solid', this.die)
         .bind('Moved', this.keepInField)
-        .bind('DeadPlayer', this.onDeadPlayer)
+        .bind('dead player', this.onDeadPlayer)
 		.bind('KeyDown', function() {
 			if (this.isDown('SPACE')) {
 				this.shoot('local');
@@ -76,7 +76,7 @@ Crafty.c('RemotePlayer', {
     init: function() {
         this.requires('Player, spr_remote_player')
         .onHit('Solid', this.die)
-        .bind('DeadPlayer', this.onDeadPlayer);
+        .bind('dead player', this.onDeadPlayer);
         this.scoreboard = Crafty.e('RemoteScoreboard');
     }
 });

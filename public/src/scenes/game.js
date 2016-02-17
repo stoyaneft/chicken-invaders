@@ -4,7 +4,7 @@ Crafty.scene('Game', function(game) {
 	setEventHandlers();
 	console.log(game.mode);
 	Crafty.background("url('assets/background.png')");
-	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});
+	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400});
 
 	if(game.mode === Settings.MULTIPLAYER) {
 		socket.emit('new player', {x: this.localPlayer.x,
