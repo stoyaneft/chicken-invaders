@@ -52,6 +52,7 @@ function onSocketConnection(client) {
     client.on('all connected', onAllConnected);
     client.on('game over', onGameOver);
     client.on('level completed', onLevelCompleted);
+    client.on('restart', onRestart);
     client.emit('level loaded', levels);
 };
 
@@ -73,18 +74,22 @@ function onClientDisconnect() {
 };
 
 function onNewPlayer(data) {
+    if (playerById(this.id))
+        return;
     util.log('New player in server')
     if (players.length < 2) {
         var newPlayer = new Player(data.x, data.y, this.id);
-
+        var n = players.length;
     	// Broadcast new player to connected socket clients
-    	this.broadcast.emit("new player", {sid: newPlayer.sid, x: newPlayer.getX(), y: newPlayer.getY()});
+    	this.broadcast.emit("new player", {sid: newPlayer.sid,
+            x: newPlayer.getX(), y: newPlayer.getY(), number: n});
 
     	// Send existing players to the new player
     	var i, existingPlayer;
     	for (i = 0; i < players.length; i++) {
     		existingPlayer = players[i];
-    		this.emit("new player", {sid: existingPlayer.sid, x: existingPlayer.getX(), y: existingPlayer.getY()});
+    		this.emit("new player", {sid: existingPlayer.sid,
+                x: existingPlayer.getX(), y: existingPlayer.getY(), number: 0});
     	};
 
     	// Add new player to the players array
@@ -117,8 +122,9 @@ function onMovePlayer(data) {
 };
 
 function onDeadChicken(data) {
-    chickens[data.sid].destroy();   
-    this.broadcast.emit("dead chicken", {id: data.id});
+    chickens[data.sid].destroy();
+    this.emit("dead chicken", {id: data.id});
+    this.emit('change score', data.player);
 }
 
 function onPlayerShot(data) {
@@ -140,12 +146,15 @@ function onLevelCompleted() {
         level++;
         loadLevel(level);
     }
-
-    //io.sockets.emit('level completed', levels[level]);
+    //this.broadcast.emit('level completed');
 }
 
 function onAllConnected(data) {
     layEggs();
+}
+
+function onRestart() {
+    players = [];
 }
 
 function playerById(id) {

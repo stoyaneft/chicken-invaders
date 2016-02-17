@@ -3,12 +3,12 @@ Crafty.scene('Game', function(game) {
 	var current_lvl = 1;
 	setEventHandlers();
 	console.log(game.mode);
-	console.log(game);
 	Crafty.background("url('assets/background.png')");
 	this.localPlayer = Crafty.e('LocalPlayer').attr({x:200, y:400, w:64, h:64});
 
 	if(game.mode === Settings.MULTIPLAYER) {
-		socket.emit('new player', {x: this.localPlayer.x, y: this.localPlayer.y});
+		socket.emit('new player', {x: this.localPlayer.x,
+			y: this.localPlayer.y});
 		Crafty.pause();
 		this.waitingText = Crafty.e('2D, DOM, Text')
 		.text('Waiting for other player...')
@@ -29,14 +29,12 @@ Crafty.scene('Game', function(game) {
 	}
 
 	function intitalizeChickens() {
-		console.log(current_lvl);
 		level = game.levels[current_lvl];
-		console.log(level);
 		var tile_rows = Settings.WINDOW_HEIGHT / Settings.TILE_HEIGHT;
 		var tile_cols = Settings.WINDOW_WIDTH / Settings.TILE_WIDTH;
 		var chicken_cols = Settings.CHICKENS_COUNT / Settings.CHICKEN_ROWS;
 		var padding = (tile_cols - chicken_cols) / 2;
-		for (var i = 1; i <=level.rows; i++)
+		for (var i = 1; i <= level.rows; i++)
 			for(var j = 1; j <= level.cols; j++) {
 				Crafty.e('Chicken').attr({egg_speed: level.egg_speed})
 				.at(j, i + padding-1).setSId(i*j - 1)
@@ -44,13 +42,14 @@ Crafty.scene('Game', function(game) {
 	};
 
 	function setEventHandlers() {
-		self.bind('dead chicken', onDeadChicken);
+		//self.bind('dead chicken', onDeadChicken);
 		self.bind('level completed', onLevelCompleted);
 		socket.on('disconnect', onSocketDisconnect);
 		socket.on('new player', onNewPlayer);
 		socket.on('move player', onMovePlayer);
-		socket.on('dead chicken', onDeadChickenServer);
+		socket.on('dead chicken', onDeadChicken);
 		socket.on('player shot', onPlayerShot);
+		socket.on('change score', onChangeScore);
 		socket.on('lay egg', onLayEgg);
 		socket.on('game over', onGameOver);
 	}
@@ -60,9 +59,17 @@ Crafty.scene('Game', function(game) {
 	};
 
 	function onNewPlayer(data) {
-		console.log('New player connected: '+ data.sid);
-		self.remotePlayer = Crafty.e('RemotePlayer').attr({x: data.x, y: data.y});
-		//self.remotePlayer.setPoints(game.stats.points.remote);
+		console.log(data);
+		console.log('New player connected: ' + data.sid);
+		if (data.number == 0) {
+			self.remotePlayer = Crafty.e('RemotePlayer')
+			.attr({x: data.x, y: data.y, sid: data.sid});
+			self.localPlayer.x = data.x + 200;
+		}
+		else {
+			self.remotePlayer = Crafty.e('RemotePlayer')
+			.attr({x: data.x + 200, y: data.y, sid: data.sid});
+		}
 		Crafty.pause();
 		self.waitingText.destroy();
 		socket.emit('all connected');
@@ -73,8 +80,13 @@ Crafty.scene('Game', function(game) {
 		self.remotePlayer.y = data.y;
 	};
 
-	function onDeadChickenServer(data) {
+	function onDeadChicken(data) {
 		Crafty(data.id).destroy();
+		console.log(Crafty('Chicken').length);
+		if (!Crafty('Chicken').length) {
+			socket.emit('level completed');
+			Crafty.trigger('level completed');
+		}
 	};
 
 	function onDeadChicken(data) {
@@ -85,8 +97,16 @@ Crafty.scene('Game', function(game) {
 		}
 	};
 
+	function onChangeScore(player) {
+		if (player === 'local') {
+			self.localPlayer.scoreboard.trigger('change score');
+		} else {
+			self.remotePlayer.scoreboard.trigger('change score');
+		}
+	}
+
 	function onPlayerShot(data) {
-		self.remotePlayer.shoot(self.remotePlayer.getId())
+		self.remotePlayer.shoot('remote')
 	};
 
 	function onLayEgg(data) {

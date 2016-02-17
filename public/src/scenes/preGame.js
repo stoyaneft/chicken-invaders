@@ -12,10 +12,10 @@ Crafty.scene('Loading', function(levels){
 	var sprite_map = Crafty.sprite('assets/sprite_map.png', {
 		spr_chicken: [0, 0, 64, 64],
 		spr_egg: [64, 0, 9, 11],
-		spr_player: [76, 0, 55, 64],
+		spr_local_player: [79, 0, 48, 64],
+		spr_remote_player: [132, 0, 48, 64],
 		spr_lscoreboard: [0, 64, 160, 40],
-		spr_rscoreboard: [0, 104, 160, 40],
-		spr_smoke: [133, 0, 27, 27]
+		spr_rscoreboard: [0, 104, 160, 40]
 	});
 
 	var assetsObj = {

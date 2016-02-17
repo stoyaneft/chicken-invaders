@@ -2,13 +2,8 @@ Crafty.c('Player', {
 	init: function() {
 		this.requires('2D, Canvas, Collision')
         this.lives = Settings.MAX_LIVES;
-        //this.points = this.points | 0;
         this.immortal = false;
 	},
-
-    setPoints: function(points) {
-        this.scoreboard.set(points);
-    },
 
     die: function(data) {
         if (!this.immortal) {
@@ -41,18 +36,19 @@ Crafty.c('Player', {
                 }
             }, 3000);
 
-            this.scoreboard.trigger('ChangeLives')
+            this.scoreboard.trigger('change lives')
         }
     },
 
-    shoot: function(data) {
-		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2 - 5, y: this.y, w:5, h:5, playerId: data.id});
+    shoot: function(player) {
+		Crafty.e('Bullet').attr({x: this.x + Settings.TILE_WIDTH / 2 - 5,
+			y: this.y, w:5, h:5, player: player});
 	}
 });
 
 Crafty.c('LocalPlayer', {
 	init: function() {
-		this.requires('Player, Fourway, Mouse, Keyboard, spr_player')
+		this.requires('Player, Fourway, Mouse, Keyboard, spr_local_player')
 		.fourway(4)
     	.collision([1, 46], [10, 10], [32, 0], [51, 10], [59, 46])
         .onHit('Solid', this.die)
@@ -60,16 +56,12 @@ Crafty.c('LocalPlayer', {
         .bind('DeadPlayer', this.onDeadPlayer)
 		.bind('KeyDown', function() {
 			if (this.isDown('SPACE')) {
-				this.shoot({id: this.getId()});
-                socket.emit('player shot', {id: this.getId()});
+				this.shoot('local');
+                socket.emit('player shot');
             }
 		});
         this.scoreboard = Crafty.e('LocalScoreboard');
 	},
-
-    setPoints: function(points) {
-        this.scoreboard.set(points);
-    },
 
     keepInField: function(oldPos) {
         if (this.x + this.w >= Settings.WINDOW_WIDTH || this.x <= 0 || this.y <= 0 || this.y + this.h >= Settings.WINDOW_HEIGHT) {
@@ -82,7 +74,7 @@ Crafty.c('LocalPlayer', {
 
 Crafty.c('RemotePlayer', {
     init: function() {
-        this.requires('Player, spr_player')
+        this.requires('Player, spr_remote_player')
         .onHit('Solid', this.die)
         .bind('DeadPlayer', this.onDeadPlayer);
         this.scoreboard = Crafty.e('RemoteScoreboard');
@@ -99,20 +91,14 @@ Crafty.c('Bullet', {
 	},
 
 	damageChicken: function(data) {
+		var player = this.player;
+		this.destroy();
 		var chicken = data[0].obj;
         chicken.health -= Settings.BULLET_DAMAGE;
         if (chicken.health <= 0) {
             chicken.destroy();
-            if (!Crafty(this.playerId).scoreboard) {
-                Crafty('RemotePlayer').scoreboard.trigger('ChangeScore');
-            }
-            else {
-                Crafty('LocalPlayer').scoreboard.trigger('ChangeScore');
-            }
-            Crafty.trigger('dead chicken');
-            socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid});
+            socket.emit('dead chicken', {id: chicken.getId(), sid: chicken.sid, player: player});
         }
-		this.destroy();
 
 	},
 

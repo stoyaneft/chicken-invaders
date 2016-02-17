@@ -11,7 +11,7 @@ Crafty.scene('GameOver', function(game) {
 	.text(msg)
 	.textColor('lightgreen')
 	.textFont({size: '50px'});
-	Crafty.e('2D, Canvas, spr_player')
+	Crafty.e('2D, Canvas, spr_local_player')
 	.attr({x: Settings.WINDOW_WIDTH/2 - 150,
 		y: Settings.WINDOW_HEIGHT / 2 - 50, w: 60, h: 60})
 	Crafty.e('2D, DOM, Text')
@@ -21,7 +21,7 @@ Crafty.scene('GameOver', function(game) {
 	.textColor('white')
 	.textFont({size: '40px'});
 	if (game.stats.mode === Settings.MULTIPLAYER) {
-		Crafty.e('2D, Canvas, spr_player')
+		Crafty.e('2D, Canvas, spr_remote_player')
 		.attr({x: Settings.WINDOW_WIDTH/2 - 150,
 			y: Settings.WINDOW_HEIGHT / 2 + 30, w: 60, w: 60})
 		Crafty.e('2D, DOM, Text')
@@ -41,5 +41,6 @@ Crafty.scene('GameOver', function(game) {
 	.bind('KeyDown', function() {
 		game.win = false;
 		Crafty.scene('Menu', game.levels);
+		socket.emit('restart');
 	});
 });

@@ -1,8 +1,8 @@
 Crafty.c('Scoreboard', {
     init: function() {
         this.requires('2D, DOM')
-        .bind('ChangeScore', this.changeScore)
-        .bind('ChangeLives', this.changeLives);
+        .bind('change score', this.changeScore)
+        .bind('change lives', this.changeLives);
 
         this.score = Crafty.e('Points');
         this.lives = Crafty.e('Lives');
